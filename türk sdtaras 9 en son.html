@@ -1,0 +1,2904 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Brawl Stars</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+body{font-family:'Nunito',sans-serif;background:#0a0e1a;overflow:hidden;width:100vw;height:100vh;touch-action:none;}
+canvas{display:block;}
+
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;}
+.screen.active{display:flex;}
+
+/* LOADING */
+#s-load{background:radial-gradient(ellipse at center,#1a2a6e,#0a0e1a);align-items:center;justify-content:center;gap:20px;}
+.logo{font-family:'Lilita One',cursive;font-size:clamp(40px,10vw,72px);background:linear-gradient(135deg,#f7b731,#ff6b00,#e84393);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 30px rgba(247,183,49,0.6));animation:pulse 1.5s ease-in-out infinite;line-height:1;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.lbar-w{width:280px;height:12px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;}
+.lbar{height:100%;background:linear-gradient(90deg,#f7b731,#e84393);border-radius:10px;animation:lf 2.5s ease-out forwards;}
+@keyframes lf{from{width:0}to{width:100%}}
+.ltext{color:rgba(255,255,255,0.6);font-size:12px;font-weight:900;letter-spacing:2px;}
+
+/* MAIN */
+#s-main{background:linear-gradient(160deg,#1a2a5e,#0d1b3e,#1a1a2e);}
+.bg-orb{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none;animation:of 6s ease-in-out infinite;}
+@keyframes of{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
+
+/* HUD */
+.top-hud{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:8px 10px 5px;background:rgba(0,0,0,0.35);border-bottom:1px solid rgba(255,255,255,0.07);}
+.pfx{display:flex;align-items:center;gap:7px;}
+.av{width:40px;height:40px;background:linear-gradient(135deg,#e84393,#9b26c0);border-radius:10px;border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 12px rgba(232,67,147,0.4);position:relative;}
+.av-lv{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);background:#f7b731;color:#3d2000;font-size:8px;font-weight:900;padding:1px 4px;border-radius:5px;border:1.5px solid #fff;white-space:nowrap;}
+.pname{font-size:12px;font-weight:900;color:#fff;}
+.ptro{font-size:10px;color:#f7b731;}
+.cur-row{display:flex;gap:5px;}
+.cur{background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.15);border-radius:18px;padding:3px 8px;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:900;color:#fff;}
+
+/* LEFT */
+.lpanel{position:absolute;left:6px;top:62px;z-index:10;display:flex;flex-direction:column;gap:5px;}
+.lbtn{background:linear-gradient(135deg,rgba(20,40,100,0.9),rgba(10,20,60,0.9));border:2px solid rgba(255,255,255,0.15);border-radius:11px;padding:6px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;transition:transform 0.15s;min-width:105px;position:relative;}
+.lbtn:hover{transform:scale(1.04);}
+.lbtn-ic{font-size:18px;}
+.lbtn-txt{font-size:10px;font-weight:900;color:#fff;}
+.lbtn-sub{font-size:8px;color:#f7b731;}
+.badge{position:absolute;top:-5px;right:-5px;background:#ff3b3b;color:#fff;font-size:8px;font-weight:900;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;}
+
+/* RIGHT */
+.rpanel{position:absolute;right:6px;top:62px;z-index:10;display:flex;flex-direction:column;gap:5px;}
+.rbtn{background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.15);border-radius:11px;padding:6px 8px;cursor:pointer;transition:transform 0.15s;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:58px;position:relative;}
+.rbtn:hover{transform:scale(1.05);}
+.rbtn-ic{font-size:20px;}
+.rbtn-txt{font-size:9px;font-weight:900;color:#fff;text-align:center;}
+
+/* CHAR */
+.char-area{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;}
+.char-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+.char-glow{position:absolute;width:200px;height:200px;background:radial-gradient(circle,rgba(108,63,197,0.4),transparent 70%);border-radius:50%;animation:gp 2s ease-in-out infinite;}
+@keyframes gp{0%,100%{transform:scale(1);opacity:0.7}50%{transform:scale(1.15);opacity:1}}
+.main-char{font-size:clamp(80px,20vw,110px);animation:cf 3s ease-in-out infinite;filter:drop-shadow(0 10px 20px rgba(0,0,0,0.6));}
+@keyframes cf{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.online-tag{position:absolute;top:-45px;left:-20px;background:rgba(0,0,0,0.7);border:1.5px solid rgba(255,255,255,0.2);border-radius:9px;padding:4px 9px;color:#fff;font-size:10px;font-weight:800;}
+.odot{display:inline-block;width:7px;height:7px;background:#26c05a;border-radius:50%;margin-right:3px;animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* TEAM SLOTS */
+.tslots{position:absolute;bottom:118px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:10;white-space:nowrap;}
+.tslot{min-width:44px;height:46px;background:rgba(255,255,255,0.08);border:2px dashed rgba(255,255,255,0.25);border-radius:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;}
+.tslot.filled{border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.12);}
+
+/* BOTTOM */
+.bot-bar{position:absolute;bottom:0;left:0;right:0;z-index:10;}
+.xp-row{background:rgba(0,0,0,0.5);padding:5px 10px;display:flex;align-items:center;gap:8px;}
+.xp-lbl{background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);border-radius:9px;padding:3px 9px;font-size:10px;font-weight:900;color:#fff;}
+.xp-bar-w{flex:1;height:7px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;}
+.xp-bar{height:100%;width:91%;background:linear-gradient(90deg,#6c3fc5,#e84393);border-radius:10px;}
+.task-btn{background:linear-gradient(135deg,#26c05a,#1a9e44);border:none;border-radius:9px;padding:4px 10px;font-family:'Nunito',sans-serif;font-size:10px;font-weight:900;color:#fff;cursor:pointer;position:relative;}
+.play-row{padding:7px 10px 10px;display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.4);}
+.mode-card{flex:1;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:13px;padding:9px 12px;display:flex;align-items:center;gap:9px;cursor:pointer;transition:background 0.2s;}
+.mode-card:hover{background:rgba(255,255,255,0.13);}
+.mci{font-size:26px;}
+.mcname{font-family:'Lilita One',cursive;font-size:14px;color:#fff;}
+.mcmap{font-size:10px;color:rgba(255,255,255,0.6);margin-top:1px;}
+.oyna-btn{background:linear-gradient(135deg,#f7b731,#f0820a);border:none;border-radius:14px;padding:13px 28px;font-family:'Lilita One',cursive;font-size:20px;color:#3d1500;cursor:pointer;box-shadow:0 6px 20px rgba(240,130,10,0.5),inset 0 1px 0 rgba(255,255,255,0.3);transition:transform 0.1s;}
+.oyna-btn:hover{transform:scale(1.04);}
+.oyna-btn:active{transform:scale(0.97);}
+
+/* BRAWLERS SCREEN */
+#s-brawlers{background:linear-gradient(160deg,#0d1b3e,#1a1030);}
+.sh{background:rgba(0,0,0,0.5);padding:9px 12px;display:flex;align-items:center;gap:9px;border-bottom:2px solid rgba(255,255,255,0.08);}
+.back{background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);border-radius:9px;padding:5px 11px;color:#fff;font-size:12px;font-weight:900;cursor:pointer;}
+.stitle{font-family:'Lilita One',cursive;font-size:18px;color:#fff;flex:1;}
+.bfilter{display:flex;gap:5px;padding:7px 10px;background:rgba(0,0,0,0.3);flex-wrap:wrap;}
+.fb{padding:4px 10px;border-radius:18px;font-size:10px;font-weight:900;cursor:pointer;border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);background:transparent;transition:all 0.2s;}
+.fb.active{background:#f7b731;color:#3d2000;border-color:#f7b731;}
+.bgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:8px;overflow-y:auto;flex:1;}
+.bgrid::-webkit-scrollbar{width:3px;}
+.bgrid::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:3px;}
+.bc{background:linear-gradient(135deg,rgba(30,50,100,0.8),rgba(15,25,60,0.9));border:2px solid rgba(255,255,255,0.15);border-radius:13px;padding:9px 7px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:transform 0.15s;position:relative;overflow:hidden;}
+.bc:hover{transform:scale(1.03);}
+.bc-em{font-size:38px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5));}
+.bc-name{font-family:'Lilita One',cursive;font-size:11px;color:#fff;text-align:center;}
+.bc-pw{font-size:9px;color:#f7b731;font-weight:900;}
+.bc-tr{font-size:9px;color:rgba(255,255,255,0.6);font-weight:800;}
+.rbar{width:100%;height:3px;border-radius:3px;margin-top:2px;}
+.pds{display:flex;gap:2px;margin-top:1px;}
+.pd{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.15);}
+.pd.on{background:#f7b731;}
+
+/* MODES SCREEN */
+#s-modes{background:linear-gradient(160deg,#0d1e1a,#0a1510);}
+.mtabs{display:flex;background:rgba(0,0,0,0.5);border-bottom:2px solid rgba(255,255,255,0.08);overflow-x:auto;}
+.mtab{flex-shrink:0;padding:9px 10px;text-align:center;font-size:10px;font-weight:900;color:rgba(255,255,255,0.5);cursor:pointer;transition:all 0.2s;border-bottom:3px solid transparent;white-space:nowrap;}
+.mtab.active{color:#fff;border-bottom-color:#f7b731;}
+.mcontent{flex:1;overflow-y:auto;padding:10px;}
+.mcontent::-webkit-scrollbar{width:3px;}
+.msec{margin-bottom:14px;}
+.msec-t{font-family:'Lilita One',cursive;font-size:15px;color:#f7b731;margin-bottom:8px;}
+.mcards{display:flex;gap:7px;overflow-x:auto;padding-bottom:6px;}
+.mcards::-webkit-scrollbar{height:3px;}
+.mcard{min-width:150px;border-radius:14px;overflow:hidden;cursor:pointer;transition:transform 0.15s;flex-shrink:0;border:2px solid rgba(255,255,255,0.15);position:relative;}
+.mcard:hover{transform:scale(1.03);}
+.mcard-top{width:100%;height:90px;display:flex;align-items:center;justify-content:center;position:relative;}
+.mcard-rules{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);padding:2px 6px;font-size:9px;color:rgba(255,255,255,0.7);font-weight:800;}
+.mcard-info{padding:7px 9px;background:rgba(0,0,0,0.6);}
+.mcard-name{font-family:'Lilita One',cursive;font-size:12px;color:#fff;}
+.mcard-map{font-size:9px;color:rgba(255,255,255,0.6);margin-top:1px;}
+.mcard-play{position:absolute;bottom:0;right:0;background:rgba(247,183,49,0.9);padding:4px 9px;border-radius:7px 0 0 0;font-family:'Lilita One',cursive;font-size:11px;color:#3d2000;}
+.new-b{position:absolute;top:5px;right:5px;background:#ff3b3b;color:#fff;font-size:8px;font-weight:900;padding:2px 5px;border-radius:5px;}
+
+/* GAME CANVAS */
+#s-game{background:#000;}
+#gc{position:absolute;inset:0;}
+
+/* GAME HUD */
+.ghud-top{position:absolute;top:0;left:0;right:0;z-index:20;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);}
+.gem-ctr{display:flex;align-items:center;gap:8px;font-family:'Lilita One',cursive;font-size:18px;color:#fff;}
+.gtimer{font-family:'Lilita One',cursive;font-size:22px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.5);}
+.score-info{font-size:11px;font-weight:900;color:#fff;text-align:right;}
+
+/* Showdown HUD */
+.show-hud{position:absolute;top:52px;right:8px;z-index:20;background:rgba(0,0,0,0.6);border-radius:10px;padding:6px 10px;font-size:11px;font-weight:900;color:#fff;}
+
+/* Brawl Ball goal indicator */
+.goal-ind{position:absolute;z-index:20;font-family:'Lilita One',cursive;font-size:18px;color:#fff;background:rgba(0,0,0,0.7);border-radius:10px;padding:5px 12px;pointer-events:none;animation:goalanim 1.5s ease-out forwards;}
+@keyframes goalanim{0%{opacity:1;transform:scale(0.5)}50%{transform:scale(1.3)}100%{opacity:0;transform:scale(1)}}
+
+/* Countdown */
+.countdown{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);font-family:'Lilita One',cursive;font-size:80px;color:#fff;animation:cda 0.4s ease-out;}
+@keyframes cda{from{transform:scale(0)}to{transform:scale(1)}}
+
+/* Heist safe */
+.safe-hp{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:21;display:flex;gap:20px;padding:4px 0;}
+.safe-card{background:rgba(0,0,0,0.7);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:900;}
+
+/* Kill feed */
+.kfeed{position:absolute;top:55px;left:8px;z-index:20;display:flex;flex-direction:column;gap:3px;pointer-events:none;}
+.ki{background:rgba(0,0,0,0.65);border-radius:7px;padding:3px 8px;font-size:10px;font-weight:900;color:#fff;animation:kia 0.3s ease-out;}
+@keyframes kia{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+
+/* Clouds (Showdown) */
+.poison{position:absolute;pointer-events:none;z-index:18;opacity:0.55;font-size:30px;}
+
+/* Controls */
+.ghud-bot{position:absolute;bottom:0;left:0;right:0;z-index:20;padding:8px 10px 12px;display:flex;align-items:flex-end;justify-content:space-between;background:linear-gradient(transparent,rgba(0,0,0,0.65));}
+.joy{width:76px;height:76px;background:rgba(255,255,255,0.1);border-radius:50%;border:2.5px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;position:relative;touch-action:none;cursor:pointer;}
+.joy-dot{width:30px;height:30px;background:rgba(255,255,255,0.7);border-radius:50%;transition:transform 0.05s;}
+.atk-btns{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.sup-btn{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#f7b731,#e87810);border:3px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 4px 15px rgba(247,183,49,0.5);transition:transform 0.1s;}
+.sup-btn.rdy{animation:sp 1s ease-in-out infinite;}
+@keyframes sp{0%,100%{box-shadow:0 4px 15px rgba(247,183,49,0.5)}50%{box-shadow:0 4px 25px rgba(247,183,49,0.9)}}
+.atk-btn{width:66px;height:66px;border-radius:50%;background:linear-gradient(135deg,#e84343,#c01010);border:3px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;box-shadow:0 6px 20px rgba(232,67,67,0.5);transition:transform 0.1s;}
+.atk-btn:active,.sup-btn:active{transform:scale(0.92);}
+
+/* Game over */
+.gover{position:absolute;inset:0;background:rgba(0,0,0,0.85);z-index:50;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(8px);}
+.gover.show{display:flex;}
+.got{font-family:'Lilita One',cursive;font-size:clamp(36px,10vw,52px);}
+.gstats{background:rgba(255,255,255,0.08);border-radius:14px;padding:14px 22px;display:flex;flex-direction:column;gap:7px;min-width:240px;}
+.gsr{display:flex;justify-content:space-between;gap:24px;font-size:12px;color:#fff;font-weight:900;}
+.gsr span:last-child{color:#f7b731;}
+.cont-btn{background:linear-gradient(135deg,#f7b731,#f0820a);border:none;border-radius:13px;padding:11px 30px;font-family:'Lilita One',cursive;font-size:18px;color:#3d1500;cursor:pointer;box-shadow:0 6px 20px rgba(240,130,10,0.5);}
+
+/* Toast */
+.toast{position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(0,0,0,0.9);border:2px solid rgba(255,255,255,0.2);border-radius:13px;padding:9px 18px;color:#fff;font-size:12px;font-weight:900;backdrop-filter:blur(10px);white-space:nowrap;pointer-events:none;animation:tin 0.3s,tout 0.3s 2s forwards;}
+@keyframes tin{from{opacity:0;transform:translateX(-50%) translateY(-16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes tout{from{opacity:1}to{opacity:0}}
+
+/* SHOP */
+#s-shop{background:linear-gradient(160deg,#0d1520,#1a0d2e);}
+.shop-tabs{display:flex;background:rgba(0,0,0,0.5);border-bottom:2px solid rgba(255,255,255,0.08);overflow-x:auto;}
+.shop-tab{flex-shrink:0;padding:9px 12px;font-size:10px;font-weight:900;color:rgba(255,255,255,0.5);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.2s;}
+.shop-tab.active{color:#fff;border-bottom-color:#e84393;}
+.shop-body{flex:1;overflow-y:auto;padding:10px;}
+.shop-body::-webkit-scrollbar{width:3px;}
+.shop-banner{background:linear-gradient(135deg,#e84393,#9b26c0);border-radius:14px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.shop-banner-txt{font-family:'Lilita One',cursive;font-size:15px;color:#fff;}
+.shop-banner-sub{font-size:10px;color:rgba(255,255,255,0.8);margin-top:3px;}
+.shop-timer{background:rgba(0,0,0,0.4);border-radius:8px;padding:4px 10px;font-family:'Lilita One',cursive;font-size:13px;color:#f7b731;}
+.shop-section{margin-bottom:14px;}
+.shop-sec-title{font-family:'Lilita One',cursive;font-size:13px;color:#f7b731;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.shop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.shop-item{background:linear-gradient(135deg,rgba(25,15,50,0.9),rgba(15,10,35,0.95));border:2px solid rgba(255,255,255,0.12);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform 0.15s,border-color 0.2s;position:relative;}
+.shop-item:hover{transform:scale(1.02);border-color:rgba(255,255,255,0.3);}
+.shop-item.featured{border-color:#f7b731;box-shadow:0 0 12px rgba(247,183,49,0.3);}
+.shop-item.gem-deal{border-color:#00ccff;box-shadow:0 0 12px rgba(0,204,255,0.3);}
+.shop-item-top{height:90px;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;}
+.shop-item-badge{position:absolute;top:6px;right:6px;background:#ff3b3b;color:#fff;font-size:8px;font-weight:900;padding:2px 6px;border-radius:5px;}
+.shop-item-badge.new{background:#26c05a;}
+.shop-item-badge.sale{background:#ff8800;}
+.shop-item-info{padding:8px 10px;background:rgba(0,0,0,0.5);}
+.shop-item-name{font-family:'Lilita One',cursive;font-size:11px;color:#fff;}
+.shop-item-type{font-size:9px;color:rgba(255,255,255,0.5);margin-top:1px;}
+.shop-item-price{display:flex;align-items:center;gap:4px;margin-top:6px;}
+.price-gem{background:linear-gradient(135deg,#00ccff,#0066ff);border-radius:18px;padding:4px 10px;font-family:'Lilita One',cursive;font-size:11px;color:#fff;display:flex;align-items:center;gap:3px;}
+.price-coin{background:linear-gradient(135deg,#f7b731,#e87810);border-radius:18px;padding:4px 10px;font-family:'Lilita One',cursive;font-size:11px;color:#3d1500;display:flex;align-items:center;gap:3px;}
+.price-free{background:linear-gradient(135deg,#26c05a,#1a9e44);border-radius:18px;padding:4px 10px;font-family:'Lilita One',cursive;font-size:11px;color:#fff;}
+.price-old{font-size:9px;color:rgba(255,255,255,0.4);text-decoration:line-through;margin-left:4px;}
+.shop-wide{grid-column:1/-1;display:flex;align-items:center;background:linear-gradient(135deg,rgba(247,183,49,0.1),rgba(240,130,10,0.15));border:2px solid rgba(247,183,49,0.3);border-radius:14px;padding:12px 14px;gap:12px;cursor:pointer;transition:transform 0.15s;}
+.shop-wide:hover{transform:scale(1.01);}
+.shop-wide-em{font-size:38px;}
+.shop-wide-txt{flex:1;}
+.shop-wide-name{font-family:'Lilita One',cursive;font-size:13px;color:#fff;}
+.shop-wide-sub{font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;}
+.buy-btn{background:linear-gradient(135deg,#f7b731,#f0820a);border:none;border-radius:10px;padding:6px 14px;font-family:'Lilita One',cursive;font-size:12px;color:#3d1500;cursor:pointer;white-space:nowrap;}
+.starr-pass{background:linear-gradient(135deg,#1a1a3e,#2a0a5e);border:2px solid #6c3fc5;border-radius:16px;padding:14px;margin-bottom:12px;position:relative;overflow:hidden;}
+.starr-pass::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top right,rgba(108,63,197,0.3),transparent 60%);}
+.sp-row{display:flex;align-items:center;justify-content:space-between;position:relative;}
+.sp-name{font-family:'Lilita One',cursive;font-size:16px;color:#fff;}
+.sp-sub{font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px;}
+.sp-rewards{display:flex;gap:6px;margin-top:10px;}
+.sp-rew{background:rgba(255,255,255,0.08);border-radius:8px;padding:4px 8px;font-size:10px;color:#fff;font-weight:900;text-align:center;}
+.sp-rew span{display:block;font-size:14px;}
+.sp-btn{background:linear-gradient(135deg,#6c3fc5,#9b26c0);border:none;border-radius:10px;padding:8px 16px;font-family:'Lilita One',cursive;font-size:13px;color:#fff;cursor:pointer;}
+.offer-box{background:linear-gradient(135deg,rgba(232,67,147,0.1),rgba(155,38,192,0.15));border:2px solid rgba(232,67,147,0.3);border-radius:14px;padding:12px;margin-bottom:12px;}
+.offer-title{font-family:'Lilita One',cursive;font-size:13px;color:#e84393;margin-bottom:8px;}
+
+/* PAYMENT MODAL */
+.pay-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.pay-overlay.open{display:flex;}
+.pay-modal{background:linear-gradient(160deg,#0d1520,#1a0d2e);border:2px solid rgba(255,255,255,0.12);border-radius:20px;width:90%;max-width:380px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.7);}
+.pay-header{background:linear-gradient(135deg,#1a2a6e,#0d1b3e);padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.pay-logo{font-size:22px;}
+.pay-header-txt{font-family:'Lilita One',cursive;font-size:15px;color:#fff;flex:1;}
+.pay-secure{display:flex;align-items:center;gap:4px;font-size:9px;color:#26c05a;font-weight:900;}
+.pay-body{padding:16px;}
+.pay-product{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.pay-product-em{font-size:28px;}
+.pay-product-name{font-family:'Lilita One',cursive;font-size:13px;color:#fff;}
+.pay-product-price{font-family:'Lilita One',cursive;font-size:16px;color:#f7b731;margin-left:auto;}
+.pay-label{font-size:10px;font-weight:900;color:rgba(255,255,255,0.5);margin-bottom:5px;margin-top:12px;letter-spacing:0.5px;}
+.pay-input{width:100%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:#fff;outline:none;transition:border-color 0.2s;}
+.pay-input:focus{border-color:rgba(100,180,255,0.6);background:rgba(255,255,255,0.09);}
+.pay-input::placeholder{color:rgba(255,255,255,0.25);font-weight:600;}
+.pay-row{display:flex;gap:10px;}
+.pay-row .pay-input{flex:1;}
+.card-icons{display:flex;gap:5px;margin-bottom:4px;}
+.card-icon{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:3px 7px;font-size:11px;font-weight:900;color:rgba(255,255,255,0.4);}
+.pay-btn{width:100%;background:linear-gradient(135deg,#f7b731,#f0820a);border:none;border-radius:13px;padding:14px;font-family:'Lilita One',cursive;font-size:17px;color:#3d1500;cursor:pointer;margin-top:14px;box-shadow:0 6px 20px rgba(240,130,10,0.4);transition:transform 0.1s;}
+.pay-btn:hover{transform:scale(1.02);}
+.pay-btn:active{transform:scale(0.97);}
+.pay-cancel{width:100%;background:transparent;border:1.5px solid rgba(255,255,255,0.15);border-radius:13px;padding:10px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:900;color:rgba(255,255,255,0.5);cursor:pointer;margin-top:8px;}
+.pay-cancel:hover{color:#fff;}
+.pay-terms{font-size:9px;color:rgba(255,255,255,0.3);text-align:center;margin-top:10px;line-height:1.5;}
+.pay-form-area{transition:opacity 0.3s;}
+.pay-success{display:none;flex-direction:column;align-items:center;padding:30px 20px;gap:10px;text-align:center;}
+.pay-success.show{display:flex;}
+.pay-success-icon{font-size:56px;animation:popIn 0.4s ease-out;}
+@keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+.pay-success-title{font-family:'Lilita One',cursive;font-size:22px;color:#26c05a;}
+.pay-success-sub{font-size:12px;color:rgba(255,255,255,0.6);font-weight:700;}
+.pay-success-btn{background:linear-gradient(135deg,#26c05a,#1a9e44);border:none;border-radius:13px;padding:12px 28px;font-family:'Lilita One',cursive;font-size:16px;color:#fff;cursor:pointer;margin-top:8px;}
+.card-num-wrap{position:relative;}
+.card-brand{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:18px;}
+
+
+
+/* NAME ENTRY SCREEN */
+#s-nameentry{background:radial-gradient(ellipse at center,#1a2a6e,#0a0e1a);align-items:center;justify-content:center;gap:0;flex-direction:column;}
+.ne-logo{font-family:'Lilita One',cursive;font-size:clamp(36px,9vw,64px);background:linear-gradient(135deg,#f7b731,#ff6b00,#e84393);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 24px rgba(247,183,49,0.5));line-height:1;text-align:center;margin-bottom:6px;}
+.ne-sub{font-size:11px;color:rgba(255,255,255,0.45);font-weight:900;letter-spacing:2px;margin-bottom:28px;}
+.ne-box{background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.12);border-radius:20px;padding:24px 22px;width:88%;max-width:360px;display:flex;flex-direction:column;gap:14px;}
+.ne-label{font-size:11px;font-weight:900;color:rgba(255,255,255,0.5);letter-spacing:1px;}
+.ne-input{background:rgba(255,255,255,0.07);border:2px solid rgba(255,255,255,0.2);border-radius:12px;padding:13px 16px;font-family:'Nunito',sans-serif;font-size:17px;font-weight:800;color:#fff;outline:none;width:100%;transition:border-color 0.2s;}
+.ne-input:focus{border-color:#f7b731;background:rgba(255,255,255,0.1);}
+.ne-input::placeholder{color:rgba(255,255,255,0.2);}
+.ne-start{background:linear-gradient(135deg,#f7b731,#f0820a);border:none;border-radius:14px;padding:15px;font-family:'Lilita One',cursive;font-size:20px;color:#3d1500;cursor:pointer;box-shadow:0 6px 24px rgba(240,130,10,0.5);transition:transform 0.1s;width:100%;}
+.ne-start:hover{transform:scale(1.03);}
+.ne-start:active{transform:scale(0.96);}
+.ne-credit{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:10px;font-weight:900;color:rgba(255,255,255,0.25);letter-spacing:1px;}
+.ne-credit span{color:rgba(247,183,49,0.5);}
+
+/* PROFILE SELECT SCREEN */
+#s-profile{background:radial-gradient(ellipse at center,#1a1a4e,#0a0e1a);align-items:center;justify-content:center;flex-direction:column;gap:0;}
+.prof-title{font-family:'Lilita One',cursive;font-size:22px;color:#fff;margin-bottom:4px;text-align:center;}
+.prof-sub{font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:22px;text-align:center;font-weight:900;}
+.prof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;padding:0 14px;width:100%;max-width:380px;}
+.prof-card{background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.15);border-radius:16px;padding:14px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:all 0.18s;position:relative;}
+.prof-card:hover{transform:scale(1.05);border-color:rgba(255,255,255,0.3);}
+.prof-card.selected{border-color:#f7b731;background:rgba(247,183,49,0.1);box-shadow:0 0 16px rgba(247,183,49,0.3);}
+.prof-em{font-size:42px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5));}
+.prof-name{font-family:'Lilita One',cursive;font-size:11px;color:#fff;text-align:center;}
+.prof-rarity{font-size:9px;font-weight:900;text-align:center;padding:2px 7px;border-radius:8px;}
+.prof-check{position:absolute;top:6px;right:6px;width:18px;height:18px;background:#f7b731;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;display:none;}
+.prof-card.selected .prof-check{display:flex;}
+.prof-confirm{background:linear-gradient(135deg,#f7b731,#f0820a);border:none;border-radius:14px;padding:14px 40px;font-family:'Lilita One',cursive;font-size:18px;color:#3d1500;cursor:pointer;margin-top:18px;box-shadow:0 6px 24px rgba(240,130,10,0.4);}
+
+/* FRIENDS panel update */
+.friend-slot{background:rgba(0,0,0,0.4);border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:5px 8px;display:flex;align-items:center;gap:7px;min-width:0;}
+.friend-em{font-size:22px;}
+.friend-info{min-width:0;}
+.friend-name{font-size:10px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.friend-tro{font-size:9px;color:#f7b731;font-weight:800;}
+
+/* Credits bar */
+.credits-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);padding:5px 0;text-align:center;font-size:10px;font-weight:900;color:rgba(255,255,255,0.35);letter-spacing:1.5px;z-index:15;}
+.credits-bar span{color:rgba(247,183,49,0.7);}
+
+.gg-countdown{position:absolute;top:52px;left:50%;transform:translateX(-50%);z-index:21;background:rgba(108,63,197,0.9);border-radius:10px;padding:4px 14px;font-family:'Lilita One',cursive;font-size:14px;color:#fff;display:none;}
+.gg-countdown.show{display:block;animation:pulse 0.5s ease-in-out infinite;}
+
+/* Knockout rounds */
+.ko-rounds{position:absolute;top:52px;left:50%;transform:translateX(-50%);z-index:21;display:flex;gap:8px;}
+.ko-r{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.5);}
+.ko-r.won{background:#26c05a;border-color:#26c05a;}
+.ko-r.lost{background:#ff4444;border-color:#ff4444;}
+
+/* Bounty stars */
+.bounty-info{position:absolute;top:52px;left:8px;z-index:21;background:rgba(0,0,0,0.65);border-radius:10px;padding:5px 10px;font-size:11px;font-weight:900;color:#fff;}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="screen active" id="s-load">
+  <div class="logo">BRAWL<br>STARS</div>
+  <div class="lbar-w"><div class="lbar"></div></div>
+  <div class="ltext">YÜKLENİYOR...</div>
+  <div style="position:absolute;bottom:12px;font-size:9px;font-weight:900;color:rgba(255,255,255,0.2);letter-spacing:2px;">YAPIMCI: <span style="color:rgba(247,183,49,0.5);">ENSAR ÇINAR</span></div>
+</div>
+
+<!-- NAME ENTRY -->
+<div class="screen" id="s-nameentry">
+  <div class="ne-logo">BRAWL<br>STARS</div>
+  <div class="ne-sub">TÜRK SUNUCUSU</div>
+  <div class="ne-box">
+    <div class="ne-label">OYUNCU ADINIZI GİRİN</div>
+    <input class="ne-input" id="nameInput" type="text" maxlength="16" placeholder="Adınız..." autocomplete="off">
+    <button class="ne-start" onclick="submitName()">▶ DEVAM ET</button>
+  </div>
+  <div class="ne-credit">YAPIMCI: <span>ENSAR ÇINAR</span></div>
+</div>
+
+<!-- PROFILE SELECT -->
+<div class="screen" id="s-profile">
+  <div class="prof-title">🎭 PROFİL SEÇ</div>
+  <div class="prof-sub">KARAKTERİNİ SEÇ</div>
+  <div class="prof-grid" id="profGrid"></div>
+  <button class="prof-confirm" onclick="confirmProfile()">✅ ONAYLA</button>
+  <div class="ne-credit">YAPIMCI: <span>ENSAR ÇINAR</span></div>
+</div>
+
+<!-- MAIN -->
+<div class="screen" id="s-main">
+  <div class="bg-orb" style="width:300px;height:300px;background:rgba(108,63,197,0.25);top:-100px;right:-50px;animation-delay:0s;"></div>
+  <div class="bg-orb" style="width:200px;height:200px;background:rgba(232,67,147,0.18);bottom:120px;left:-50px;animation-delay:2s;"></div>
+  <div class="bg-orb" style="width:150px;height:150px;background:rgba(247,183,49,0.12);top:40%;left:40%;animation-delay:4s;"></div>
+
+  <div class="top-hud">
+    <div class="pfx">
+      <div class="av" id="mainAv" style="font-size:22px;">🤖<div class="av-lv">Lv 8</div></div>
+      <div><div class="pname" id="mainName">OYUNCU</div><div class="ptro">🏆 18,165</div></div>
+    </div>
+    <div class="cur-row">
+      <div class="cur">🏆 651</div>
+      <div class="cur">⭐ 12,760</div>
+      <div class="cur">🪙 5,070</div>
+      <div class="cur" style="color:#26c05a;">💎 44</div>
+    </div>
+  </div>
+
+  <div class="lpanel">
+    <div class="lbtn" style="border-color:#f7b731;" onclick="toast('Buffie\'ler açık!')">
+      <span class="lbtn-ic">🎭</span><div><div class="lbtn-txt">BUFFİE'LER</div><div class="lbtn-sub">ÜCRETSİZ</div></div>
+    </div>
+    <div class="lbtn" style="border-color:#e84393;" onclick="goTo('shop')">
+      <span class="lbtn-ic">🛒</span><div><div class="lbtn-txt">DÜKKAN</div><div class="lbtn-sub">YENİ ÜRÜNLER</div></div>
+    </div>
+    <div class="lbtn" style="border-color:#26c05a;" onclick="goTo('brawlers')">
+      <span class="lbtn-ic">⚔️</span><div><div class="lbtn-txt">SAVAŞÇILAR</div></div><div class="badge">9</div>
+    </div>
+    <div class="lbtn" style="border-color:#9b26c0;" onclick="goTo('club')">
+      <span class="lbtn-ic">🛡️</span><div><div class="lbtn-txt">KULÜP</div><div class="lbtn-sub">986/3800</div></div>
+    </div>
+    <div class="lbtn" style="border-color:#6c3fc5;" onclick="goTo('brawlpass')">
+      <span class="lbtn-ic">⭐</span><div><div class="lbtn-txt">BRAWL PASS</div><div class="lbtn-sub">TİER 12/70</div></div>
+    </div>
+    <div class="lbtn" style="border-color:#f7b731;" onclick="goTo('trophyroad')">
+      <span class="lbtn-ic">🏆</span><div><div class="lbtn-txt">KUPA YOLU</div><div class="lbtn-sub">651 KUPA</div></div>
+    </div>
+    <div class="lbtn" style="border-color:#00d4ff;" onclick="goTo('ranking')">
+      <span class="lbtn-ic">🏅</span><div><div class="lbtn-txt">SIRALAMA</div><div class="lbtn-sub">#47 Türkiye</div></div>
+    </div>
+  </div>
+
+  <div class="rpanel">
+    <div class="rbtn" onclick="toast('Haberler!')"><div class="badge">3</div><span class="rbtn-ic">📰</span><span class="rbtn-txt">HABERLER</span></div>
+    <div class="rbtn" onclick="toast('Kulüp!')"><span class="rbtn-ic">🛡️</span><span class="rbtn-txt">KULÜP</span></div>
+    <div class="rbtn" onclick="toast('10sa 43dk')"><div class="badge">4</div><span class="rbtn-ic">⏰</span><span class="rbtn-txt">10sa 43dk</span></div>
+  </div>
+
+  <div class="char-area">
+    <div class="char-wrap">
+      <div class="char-glow"></div>
+      <div class="online-tag"><span class="odot"></span><span id="onlineFriend">Arkadaş</span> ÇEVRİMİÇİ</div>
+      <div class="main-char" id="mainChar">🤖</div>
+    </div>
+  </div>
+
+  <div class="tslots" id="tslots">
+    <div class="tslot filled" id="slot0">😎</div>
+    <div class="tslot filled" id="slot1">😊</div>
+    <div class="tslot filled" id="slot2">🎮</div>
+  </div>
+
+  <div class="bot-bar">
+    <div class="xp-row">
+      <div class="xp-lbl">XP 865/950</div>
+      <div class="xp-bar-w"><div class="xp-bar"></div></div>
+      <button class="task-btn" onclick="toast('Görevler!')">📋 GÖREVLER <span style="background:#00ff88;color:#003;font-size:7px;padding:1px 3px;border-radius:3px;">YENİ</span><div class="badge">2</div></button>
+    </div>
+    <div class="play-row">
+      <div class="mode-card" id="modeCard" onclick="goTo('modes')">
+        <div class="mci" id="modeIcon">💎</div>
+        <div>
+          <div class="mcname" id="modeName">TEK HESAPLAŞMA</div>
+          <div class="mcmap" id="modeMapName">🗺️ Tatlı Süpernova</div>
+        </div>
+      </div>
+      <button class="oyna-btn" onclick="startSelectedMode()">OYNA</button>
+    </div>
+  </div>
+
+  <div class="credits-bar">YAPIMCI: <span>ENSAR ÇINAR</span></div>
+</div>
+
+<!-- BRAWLERS -->
+<div class="screen" id="s-brawlers">
+  <div style="background:linear-gradient(160deg,#0d1b3e,#1a1030);height:100%;display:flex;flex-direction:column;">
+    <div class="sh">
+      <button class="back" onclick="goTo('main')">◀ Geri</button>
+      <div class="stitle">⚔️ SAVAŞÇILAR</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);font-weight:800;">76 / 100</div>
+    </div>
+    <div class="bfilter">
+      <button class="fb active" onclick="filt('all',this)">Tümü</button>
+      <button class="fb" onclick="filt('common',this)">Yaygın</button>
+      <button class="fb" onclick="filt('rare',this)">Nadir</button>
+      <button class="fb" onclick="filt('super-rare',this)">Süper Nadir</button>
+      <button class="fb" onclick="filt('epic',this)">Epik</button>
+      <button class="fb" onclick="filt('mythic',this)">Mistik</button>
+      <button class="fb" onclick="filt('legendary',this)">Efsane</button>
+    </div>
+    <div class="bgrid" id="bgrid"></div>
+  </div>
+</div>
+
+<!-- MODES -->
+<div class="screen" id="s-modes">
+  <div class="sh">
+    <button class="back" onclick="goTo('main')">◀ Geri</button>
+    <div class="stitle">🎮 OYUN MODLARI</div>
+  </div>
+  <div class="mtabs" id="mtabs">
+    <div class="mtab active" onclick="switchTab('starr',this)">⭐ STARR</div>
+    <div class="mtab" onclick="switchTab('ozel',this)">🎯 ÖZEL</div>
+    <div class="mtab" onclick="switchTab('kupa',this)">🏆 KUPA</div>
+    <div class="mtab" onclick="switchTab('asamali',this)">📈 AŞAMALI</div>
+    <div class="mtab" onclick="switchTab('serbest',this)">🎮 SERBEST</div>
+    <div class="mtab" onclick="switchTab('topluluk',this)">👥 TOPLULUK</div>
+  </div>
+  <div class="mcontent" id="mcontent"></div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="s-game">
+  <canvas id="gc"></canvas>
+
+  <div class="ghud-top">
+    <div class="gem-ctr" id="gemCtr">💎 <span id="blueScore" style="color:#00ccff;">0</span> vs <span id="redScore" style="color:#ff4444;">0</span></div>
+    <div class="gtimer" id="gtimer">2:30</div>
+    <div class="score-info" id="scoreInfo">Mod yükleniyor...</div>
+  </div>
+
+  <!-- mode-specific overlays -->
+  <div class="gg-countdown" id="ggCountdown">⏱️ 15s</div>
+  <div class="ko-rounds" id="koRounds"></div>
+  <div class="bounty-info" id="bountyInfo" style="display:none"></div>
+  <div class="safe-hp" id="safeHp" style="display:none">
+    <div class="safe-card" style="color:#00ccff;">🏦 Senin: <span id="mySafe">100%</span></div>
+    <div class="safe-card" style="color:#ff4444;">🏦 Düşman: <span id="enSafe">100%</span></div>
+  </div>
+
+  <div class="kfeed" id="kfeed"></div>
+
+  <div class="ghud-bot">
+    <div class="joy" id="joy"><div class="joy-dot" id="jdot"></div></div>
+    <div class="atk-btns">
+      <div class="sup-btn" id="supBtn" onclick="fireSuper()">⚡</div>
+      <div class="atk-btn" onclick="fireAtk()">🔫</div>
+    </div>
+  </div>
+
+  <div class="gover" id="gover">
+    <div class="got" id="gotitle"></div>
+    <div class="gstats" id="gstats"></div>
+    <button class="cont-btn" onclick="goTo('main')">Ana Menüye Dön</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const BRAWLERS = [
+  {name:'SHELLY',em:'👩‍🦱',r:'common',pw:11,tr:10},
+  {name:'NITA',em:'🐻',r:'rare',pw:11,tr:33},
+  {name:'COLT',em:'🤠',r:'rare',pw:11,tr:102},
+  {name:'BULL',em:'🐂',r:'rare',pw:7,tr:260},
+  {name:'BROCK',em:'🚀',r:'rare',pw:7,tr:300},
+  {name:'EL PRIMO',em:'🤼',r:'rare',pw:7,tr:90},
+  {name:'BARLEY',em:'🍺',r:'rare',pw:5,tr:0},
+  {name:'POCO',em:'🎸',r:'rare',pw:7,tr:102},
+  {name:'ROSA',em:'🌺',r:'rare',pw:9,tr:245},
+  {name:'JESSIE',em:'⚡',r:'super-rare',pw:3,tr:0},
+  {name:'DYNAMIKE',em:'💣',r:'super-rare',pw:11,tr:33},
+  {name:'TICK',em:'🕛',r:'super-rare',pw:7,tr:130},
+  {name:'8-BIT',em:'🎮',r:'super-rare',pw:9,tr:200},
+  {name:'RICO',em:'🎯',r:'super-rare',pw:7,tr:180},
+  {name:'STU',em:'🏍️',r:'epic',pw:6,tr:106},
+  {name:'PIPER',em:'🎩',r:'epic',pw:3,tr:0},
+  {name:'PAM',em:'🔧',r:'epic',pw:9,tr:247},
+  {name:'FRANK',em:'🔨',r:'epic',pw:11,tr:365},
+  {name:'BIBI',em:'🏏',r:'epic',pw:5,tr:280},
+  {name:'BEA',em:'🐝',r:'epic',pw:5,tr:244},
+  {name:'EMZ',em:'📸',r:'epic',pw:9,tr:270},
+  {name:'GRIFF',em:'💰',r:'epic',pw:7,tr:190},
+  {name:'GALE',em:'❄️',r:'epic',pw:8,tr:215},
+  {name:'TARA',em:'🔮',r:'mythic',pw:9,tr:380},
+  {name:'GENE',em:'🧞',r:'mythic',pw:7,tr:290},
+  {name:'MAX',em:'💨',r:'mythic',pw:11,tr:430},
+  {name:'MR.P',em:'🐧',r:'mythic',pw:9,tr:310},
+  {name:'CROW',em:'🐦',r:'mythic',pw:11,tr:601},
+  {name:'LEON',em:'🦎',r:'legendary',pw:11,tr:500},
+  {name:'SANDY',em:'🏜️',r:'legendary',pw:9,tr:480},
+  {name:'AMBER',em:'🔥',r:'legendary',pw:7,tr:310},
+  {name:'SPIKE',em:'🌵',r:'legendary',pw:9,tr:550},
+  {name:'MORTIS',em:'🦇',r:'mythic',pw:10,tr:420},
+];
+
+const RARITY_COLOR = {common:'#808080',rare:'#00d4ff','super-rare':'#0066ff',epic:'#a020f0',mythic:'#ff4444',legendary:'#f7b731'};
+
+const BOT_NAMES = [
+  'Kemal','Burak','Emre','Serkan','Oğuzhan','Tarık','Berat','Arda','Kaan','Furkan',
+  'Alp','Enes','Tolga','Mert','Gökhan','Onur','Deniz','Berkay','Uğur','Selim',
+  'Zeynep','Elif','Ayşe','Merve','Selin','Büşra','Cansu','Dilan','Ece','Fatma',
+  'Hande','İrem','Kübra','Lale','Melis','Neslihan','Özge','Pınar','Rabia','Seda',
+  'xBrawler','ProTR','KorkunçBot','SavaşçıTR','KralFR','GüçlüAli','MegaBurak'
+];
+
+function randBotName(){
+  return BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)];
+}
+
+const MODES_DATA = {
+  starr:{title:'⭐ STARR AKINI',modes:[
+    {id:'showdown',name:'HESAPLAŞMA',map:'Tatlı Süpernova',icon:'💀',color:'#8b4513',bg:'#2a1000',rules:'Son kalan kazanır!',timer:'4dk 53sn',new:true},
+    {id:'gemgrab',name:'STARR AKINI',map:'Kristal Arenası',icon:'💎',color:'#6c3fc5',bg:'#1a1040',rules:'10 gem tut ve kazan!',timer:'Özel'},
+    {id:'brawlball',name:'GÜÇLENDİR ME PARTİSİ',map:'Super Beach',icon:'⚽',color:'#26c05a',bg:'#0d2a1a',rules:'2 gol at kazanırsın!',timer:'4dk'},
+  ]},
+  ozel:{title:'🎯 ÖZEL MODLAR',modes:[
+    {id:'gemgrab',name:'GEM GRAB',map:'Kristal Arenası',icon:'💎',color:'#6c3fc5',bg:'#1a1040',rules:'10 gem tut 15sn → zafer',timer:'3dk 45sn'},
+    {id:'showdown',name:'SHOWDOWN',map:'Toksik Bataklık',icon:'💀',color:'#8b4513',bg:'#2a1000',rules:'Battle royale - son kalan!',timer:'Her zaman'},
+    {id:'brawlball',name:'BRAWL BALL',map:'Super Beach',icon:'⚽',color:'#26c05a',bg:'#0d2a1a',rules:'3v3 futbol - 2 gol!',timer:'2dk 30sn'},
+    {id:'heist',name:'HEİST',map:'Safe Zone',icon:'🏦',color:'#ff8800',bg:'#3d2000',rules:'Düşman kasasını yok et!',timer:'2dk 30sn'},
+    {id:'bounty',name:'BOUNTY',map:'Layer Cake',icon:'⭐',color:'#00aaff',bg:'#001a3d',rules:'Yıldız topla, ölme!',timer:'2dk'},
+    {id:'hotzone',name:'HOT ZONE',icon:'🔴',map:'Open Business',color:'#ff4444',bg:'#3d0000',rules:'Bölgeyi ele geçir!',timer:'2dk'},
+    {id:'knockout',name:'KNOCKOUT',map:'Alkuş Alanı',icon:'👊',color:'#ff8800',bg:'#3d2000',rules:'3 tur - tüm düşmanları ele!',timer:'2dk x3'},
+  ]},
+  kupa:{title:'🏆 KUPA OYUNLARI',modes:[
+    {id:'showdown',name:'HESAPLAŞMA',map:'Tatlı Süpernova',icon:'💀',color:'#8b4513',bg:'#2a1000',rules:'Battle Royale!',timer:'4dk 43sn',new:true},
+    {id:'brawlball',name:'SAVAŞ TOPU',map:'Tok Alanı',icon:'⚽',color:'#26c05a',bg:'#0a2a1a',rules:'2 gol at!',timer:'10dk 45sn',new:true},
+    {id:'knockout',name:'NAKAVT',map:'Alkuş Küçük',icon:'👊',color:'#ff8800',bg:'#3d2000',rules:'3 rondada kazan!',timer:'4dk 45sn'},
+    {id:'gemgrab',name:'ELMAS KAPMACA',map:'Depulama Alanı',icon:'💎',color:'#6c3fc5',bg:'#1a0a40',rules:'10 gem tut!',timer:'2dk 45sn',new:true},
+    {id:'heist',name:'SOYGUN',map:'Sıcak Paletes',icon:'🏦',color:'#ff4444',bg:'#3d0000',rules:'Düşman kasasını yok et!',timer:''},
+  ]},
+  asamali:{title:'📈 AŞAMALI',modes:[
+    {id:'knockout',name:'AŞAMALI',map:'Rastgele Modlar',icon:'📈',color:'#00aaff',bg:'#001a3d',rules:'Rastgele mod - tırman!',timer:'1dk 5sn'},
+    {id:'heist',name:'SAVAŞ ARENASI',map:'Zorlu Zemin',icon:'⚔️',color:'#ff4444',bg:'#3d0000',rules:'Kasayı kır!',timer:''},
+    {id:'gemgrab',name:'ELMAS KAPMACA',map:'Kristal Mavilik',icon:'💎',color:'#6c3fc5',bg:'#1a0a40',rules:'10 gem tut!',timer:''},
+    {id:'bounty',name:'BOUNTY KUPASI',map:'Haftalık Özel',icon:'⭐',color:'#f7b731',bg:'#3d2000',rules:'En çok yıldız!',timer:''},
+  ]},
+  serbest:{title:'🎮 SERBEST OYUN',modes:[
+    {id:'showdown',name:'SHOWDOWN',map:'Toksik Bataklık',icon:'💀',color:'#8b4513',bg:'#2a1000',rules:'Battle royale!',timer:'Her zaman'},
+    {id:'brawlball',name:'BRAWL BALL',map:'Super Beach',icon:'⚽',color:'#26c05a',bg:'#0d2a1a',rules:'2 gol at!',timer:'Her zaman'},
+    {id:'gemgrab',name:'GEM GRAB',map:'Kristal Arenası',icon:'💎',color:'#00aaff',bg:'#001a3d',rules:'10 gem tut!',timer:'Her zaman'},
+    {id:'hotzone',name:'HOT ZONE',map:'Open Business',icon:'🔴',color:'#ff4444',bg:'#3d0000',rules:'Bölgeyi kontrol et!',timer:'Her zaman'},
+    {id:'bounty',name:'BOUNTY',map:'Layer Cake',icon:'⭐',color:'#f7b731',bg:'#3d2000',rules:'Yıldız topla!',timer:'Her zaman'},
+    {id:'heist',name:'HEİST',map:'Safe Zone',icon:'🏦',color:'#ff8800',bg:'#3d2000',rules:'Kasayı kır!',timer:'Her zaman'},
+    {id:'knockout',name:'KNOCKOUT',map:'Alkuş Alanı',icon:'👊',color:'#9b26c0',bg:'#2a0040',rules:'3 tur kazan!',timer:'Her zaman'},
+  ]},
+  topluluk:{title:'👥 TOPLULUK',modes:[
+    {id:'gemgrab',name:'KULÜP LİGİ',map:'Rekabetçi',icon:'🏅',color:'#f7b731',bg:'#3d2000',rules:'Kulüp turnuvası!',timer:'Sezon 1'},
+    {id:'brawlball',name:'ÇİFT SHOWDOWN',map:'Takım Oyunu',icon:'🤝',color:'#e84393',bg:'#3d0020',rules:'İkili takım!',timer:'Özel'},
+  ]},
+};
+
+// ============================================================
+// GAME ENGINE
+// ============================================================
+let canvas, ctx, W, H;
+let selectedMode = 'gemgrab';
+let selectedModeName = 'GEM GRAB';
+let selectedChar = '🤖';
+let gameRunning = false;
+let gameLoop_af = null;
+let gameTimerInterval = null;
+
+// Game state
+const GS = {
+  mode:'gemgrab',
+  px:200, py:300,
+  pHp:100, pMaxHp:100,
+  pdx:0, pdy:0,
+  pEmoji:'🤖',
+  pGems:0,
+  pStars:0, pBounty:2,
+  pCubes:0,
+  superCharge:0,
+  lastAtk:0,
+  timerSec:150,
+  blueScore:0,
+  redScore:0,
+  enemies:[],
+  bullets:[],
+  gemObjs:[],
+  powerCubes:[],
+  walls:[],
+  ballX:0, ballY:0, ballVX:0, ballVY:0, ballHolder:-1,
+  // heist
+  mySafeHp:100, enSafeHp:100,
+  mySafeX:60, mySafeY:200,
+  enSafeX:600, enSafeY:200,
+  // showdown
+  poisonRadius:9999,
+  alivePlayers:0,
+  // knockout
+  koRound:1, koWins:0, koLosses:0,
+  koAlive:true, koEnemiesAlive:2,
+  // hotzone
+  zones:[],
+  captureProgress:0,
+  // bounty
+  bountyBlue:0, bountyRed:0,
+  jdx:0, jdy:0,
+  particles:[],
+  kills:0,
+  damageDealt:0,
+  lastDmgTime:0,
+};
+
+function initCanvas(){
+  canvas = document.getElementById('gc');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  W = canvas.width; H = canvas.height;
+  ctx = canvas.getContext('2d');
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goTo(id){
+  sfx('click');
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  if(id==='brawlers') renderBrawlers('all');
+  if(id==='modes'){renderModeTab('starr'); document.querySelectorAll('.mtab').forEach((t,i)=>{t.classList.toggle('active',i===0);});}
+  if(id==='shop'){renderShop('featured'); document.querySelectorAll('.shop-tab').forEach((t,i)=>{t.classList.toggle('active',i===0);});}
+  if(id==='profile'){renderProfiles();}
+  if(id==='brawlpass') renderBrawlPass();
+  if(id==='trophyroad') renderTrophyRoad();
+  if(id==='ranking') renderRanking('local');
+  if(id==='club') renderClub();
+  if(id==='game'){
+    initCanvas();
+    startGame(GS.mode);
+  }
+}
+
+function toast(msg){
+  const t=document.createElement('div');
+  t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+}
+
+// ============================================================
+// LOADING
+// ============================================================
+let charCycle = ['🤖','👽','🦸','🧙','🐻','🐂','💎'];
+let ci=0;
+// Fix stuck loading: use window.onload to ensure DOM ready
+window.addEventListener('load',()=>{
+  const bar=document.querySelector('.lbar');
+  if(bar){bar.style.transition='width 2.2s ease';setTimeout(()=>bar.style.width='100%',100);}
+  setTimeout(()=>{
+    document.getElementById('s-load').classList.remove('active');
+    document.getElementById('s-nameentry').classList.add('active');
+    setTimeout(()=>{const ni=document.getElementById('nameInput');if(ni)ni.focus();},200);
+    setInterval(()=>{
+      const el=document.getElementById('mainChar');
+      if(!el)return;
+      el.style.opacity='0';el.style.transition='opacity 0.3s';
+      setTimeout(()=>{el.textContent=charCycle[ci++%charCycle.length];el.style.opacity='1';},300);
+    },3500);
+  },2600);
+});
+
+// ============================================================
+// NAME ENTRY
+// ============================================================
+let playerName='OYUNCU';
+let selectedProfileIdx=0;
+
+const PROFILES=[
+  {em:'🤖',name:'Robo Savaşçı',rarity:'Süper Nadir',color:'#0066ff',bg:'rgba(0,80,200,0.25)'},
+  {em:'🦸',name:'Kahraman',rarity:'Epik',color:'#a020f0',bg:'rgba(140,30,200,0.25)'},
+  {em:'🧙',name:'Büyücü',rarity:'Mistik',color:'#ff4444',bg:'rgba(200,30,30,0.25)'},
+  {em:'🐻',name:'Nita',rarity:'Nadir',color:'#00d4ff',bg:'rgba(0,180,220,0.25)'},
+  {em:'🦇',name:'Mortis',rarity:'Efsane',color:'#f7b731',bg:'rgba(200,140,0,0.2)'},
+];
+
+const FRIENDS_POOL=[
+  {em:'⚔️',name:'KralFurkan',tro:'🏆 24,810'},
+  {em:'🔥',name:'AteşBurak',tro:'🏆 19,550'},
+  {em:'💎',name:'ElmasKaan',tro:'🏆 31,200'},
+  {em:'🌟',name:'YıldızEmre',tro:'🏆 15,640'},
+  {em:'🦁',name:'AslanMert',tro:'🏆 22,300'},
+  {em:'⚡',name:'BoltBerat',tro:'🏆 18,750'},
+  {em:'🎯',name:'SniperOzan',tro:'🏆 27,480'},
+  {em:'🛡️',name:'KalkanAlp',tro:'🏆 12,900'},
+  {em:'🐉',name:'EjderSerkan',tro:'🏆 35,100'},
+  {em:'🚀',name:'RoketDeniz',tro:'🏆 20,860'},
+];
+
+function submitName(){
+  const val=document.getElementById('nameInput').value.trim();
+  if(val.length<2){
+    document.getElementById('nameInput').style.borderColor='#ff4444';
+    setTimeout(()=>document.getElementById('nameInput').style.borderColor='rgba(255,255,255,0.2)',1000);
+    sfx('error');return;
+  }
+  playerName=val.toUpperCase();
+  sfx('click');
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-profile').classList.add('active');
+  renderProfiles();
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('s-nameentry').classList.contains('active')) submitName();
+});
+
+// ============================================================
+// WEB AUDIO SFX
+// ============================================================
+let audioCtx=null;
+function getAC(){if(!audioCtx){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}return audioCtx;}
+
+function sfx(type){
+  const ac=getAC();if(!ac)return;
+  const now=ac.currentTime;
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.connect(g);g.connect(ac.destination);
+
+  const configs={
+    // Menü tıklama
+    click:{type:'sine',freq:[440,520],dur:0.08,vol:0.15,gain:[0.15,0]},
+    // Hata
+    error:{type:'sawtooth',freq:[220,150],dur:0.2,vol:0.2,gain:[0.2,0]},
+    // Silah sesi - pew pew
+    shoot:{type:'square',freq:[600,200],dur:0.12,vol:0.25,gain:[0.25,0]},
+    // Hasar alma - darbe
+    hurt:{type:'sawtooth',freq:[180,90],dur:0.15,vol:0.3,gain:[0.3,0]},
+    // Düşman ölümü - patlama
+    kill:{type:'sawtooth',freq:[300,50],dur:0.3,vol:0.4,gain:[0.4,0]},
+    // Gol sesi - hoşgeldin borusu
+    goal:{type:'sine',freq:[523,659,784,1047],dur:0.5,vol:0.35,gain:[0.35,0],seq:true},
+    // Gem topla
+    gem:{type:'sine',freq:[880,1100],dur:0.15,vol:0.2,gain:[0.2,0]},
+    // Süper şarj - enerji
+    super:{type:'sine',freq:[300,600,900],dur:0.4,vol:0.3,gain:[0.3,0],seq:true},
+    // Kazanma - büyük
+    win:{type:'sine',freq:[523,659,784,880,1047],dur:0.7,vol:0.4,gain:[0.4,0],seq:true},
+    // Kaybetme - in
+    lose:{type:'sawtooth',freq:[400,300,200,150],dur:0.6,vol:0.3,gain:[0.3,0],seq:true},
+    // Top tekme
+    kick:{type:'sine',freq:[200,80],dur:0.18,vol:0.35,gain:[0.35,0]},
+    // Tarama bip
+    bip:{type:'sine',freq:[1200,1400],dur:0.06,vol:0.15,gain:[0.15,0]},
+    // Tanıma başarılı
+    scanok:{type:'sine',freq:[523,659,784],dur:0.4,vol:0.3,gain:[0.3,0],seq:true},
+    // Mermi yakın ıslık
+    whiz:{type:'sine',freq:[1800,400],dur:0.09,vol:0.1,gain:[0.1,0]},
+    // Joystick hareket
+    move:{type:'sine',freq:[200,220],dur:0.04,vol:0.04,gain:[0.04,0]},
+  };
+
+  const c=configs[type];if(!c)return;
+
+  if(c.seq){
+    // Dizi nota çal
+    const step=c.dur/c.freq.length;
+    c.freq.forEach((f,i)=>{
+      const oo=ac.createOscillator(),gg=ac.createGain();
+      oo.connect(gg);gg.connect(ac.destination);
+      oo.type=c.type;oo.frequency.setValueAtTime(f,now+i*step);
+      gg.gain.setValueAtTime(c.vol,now+i*step);
+      gg.gain.exponentialRampToValueAtTime(0.001,now+i*step+step*0.9);
+      oo.start(now+i*step);oo.stop(now+i*step+step);
+    });
+  } else {
+    o.type=c.type;
+    o.frequency.setValueAtTime(c.freq[0],now);
+    if(c.freq[1]) o.frequency.exponentialRampToValueAtTime(c.freq[1],now+c.dur);
+    g.gain.setValueAtTime(c.vol,now);
+    g.gain.exponentialRampToValueAtTime(0.001,now+c.dur);
+    o.start(now);o.stop(now+c.dur);
+  }
+}
+
+function renderProfiles(){
+  const grid=document.getElementById('profGrid');
+  grid.innerHTML=PROFILES.map((p,i)=>`
+    <div class="prof-card ${i===selectedProfileIdx?'selected':''}" onclick="selectProfile(${i})" style="background:${i===selectedProfileIdx?p.bg:'rgba(255,255,255,0.06)'};">
+      <div class="prof-check">✓</div>
+      <div class="prof-em">${p.em}</div>
+      <div class="prof-name">${p.name}</div>
+      <div class="prof-rarity" style="background:${p.color}33;color:${p.color};">${p.rarity}</div>
+    </div>
+  `).join('');
+}
+
+function selectProfile(i){
+  selectedProfileIdx=i;
+  renderProfiles();
+}
+
+function confirmProfile(){
+  sfx('click');
+  const p=PROFILES[selectedProfileIdx];
+  selectedChar=p.em;
+  GS.pEmoji=p.em;
+  // Update main screen
+  document.getElementById('mainName').textContent=playerName;
+  document.getElementById('mainAv').innerHTML=p.em+'<div class="av-lv">Lv 8</div>';
+  document.getElementById('mainChar').textContent=p.em;
+  // Arkadaşları oluştur
+  buildFriends();
+  // Online etiketi
+  const onlineNames=['xBrawler','KralFR','AteşBot','GüçlüAli'];
+  document.getElementById('onlineFriend').textContent=onlineNames[Math.floor(Math.random()*onlineNames.length)];
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-main').classList.add('active');
+}
+
+function buildFriends(){
+  const shuffled=[...FRIENDS_POOL].sort(()=>Math.random()-0.5);
+  const picks=shuffled.slice(0,3);
+  ['slot0','slot1','slot2'].forEach((id,i)=>{
+    const f=picks[i];
+    const el=document.getElementById(id);
+    el.className='tslot filled';
+    el.style.cssText='min-width:90px;background:rgba(0,0,0,0.45);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:4px 7px;display:flex;align-items:center;gap:5px;cursor:pointer;';
+    el.innerHTML=`<div style="font-size:20px;">${f.em}</div><div><div style="font-size:9px;font-weight:900;color:#fff;white-space:nowrap;">${f.name}</div><div style="font-size:8px;color:#f7b731;font-weight:800;">${f.tro}</div></div>`;
+    el.onclick=()=>toast('👋 '+f.name+' ile oyuna gir!');
+  });
+}
+
+// ============================================================
+// BRAWLERS
+// ============================================================
+function renderBrawlers(filter){
+  const list=filter==='all'?BRAWLERS:BRAWLERS.filter(b=>b.r===filter);
+  const g=document.getElementById('bgrid');
+  g.innerHTML=list.map(b=>`
+    <div class="bc" onclick="pickBrawler('${b.name}','${b.em}')" style="box-shadow:0 0 8px ${RARITY_COLOR[b.r]}33;">
+      <div class="bc-em">${b.em}</div>
+      <div class="bc-name">${b.name}</div>
+      <div class="bc-pw">⚡ Güç ${b.pw}</div>
+      <div class="bc-tr">🏆 ${b.tr}</div>
+      <div class="pds">${Array.from({length:11},(_,i)=>`<div class="pd ${i<b.pw?'on':''}"></div>`).join('')}</div>
+      <div class="rbar" style="background:${RARITY_COLOR[b.r]};"></div>
+    </div>`).join('');
+}
+function filt(type,btn){
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBrawlers(type);
+}
+function pickBrawler(name,em){
+  selectedChar=em;
+  document.getElementById('mainChar').textContent=em;
+  GS.pEmoji=em;
+  toast(name+' seçildi ✅');
+  setTimeout(()=>goTo('main'),600);
+}
+
+// ============================================================
+// MODES
+// ============================================================
+function switchTab(id,btn){
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderModeTab(id);
+}
+function renderModeTab(tab){
+  const d=MODES_DATA[tab];
+  document.getElementById('mcontent').innerHTML=`
+    <div class="msec">
+      <div class="msec-t">${d.title}</div>
+      <div class="mcards">
+        ${d.modes.map(m=>`
+          <div class="mcard" onclick="selectMode('${m.id}','${m.name}','${m.icon}','${m.map}')" style="background:${m.bg};">
+            <div class="mcard-top" style="background:linear-gradient(135deg,${m.color}44,${m.bg});">
+              <span style="font-size:46px">${m.icon}</span>
+              <div class="mcard-rules">${m.rules}</div>
+            </div>
+            <div class="mcard-info">
+              <div class="mcard-name">${m.name}</div>
+              <div class="mcard-map">🗺️ ${m.map}</div>
+              ${m.timer?`<div style="font-size:9px;color:#f7b731;margin-top:1px;">⏱️ ${m.timer}</div>`:''}
+            </div>
+            <div class="mcard-play">▶</div>
+            ${m.new?'<div class="new-b">YENİ</div>':''}
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+function selectMode(id,name,icon,map){
+  selectedMode=id;
+  selectedModeName=name;
+  GS.mode=id;
+  document.getElementById('modeIcon').textContent=icon;
+  document.getElementById('modeName').textContent=name;
+  document.getElementById('modeMapName').textContent='🗺️ '+map;
+  toast(name+' modu seçildi!');
+  setTimeout(()=>{ goTo('main'); setTimeout(()=>startSelectedMode(),300); },500);
+}
+function startSelectedMode(){
+  GS.mode=selectedMode;
+  goTo('game');
+}
+
+// ============================================================
+// GAME INIT
+// ============================================================
+function startGame(mode){
+  gameRunning=false;
+  if(gameLoop_af) cancelAnimationFrame(gameLoop_af);
+  if(gameTimerInterval) clearInterval(gameTimerInterval);
+
+  initCanvas();
+  resetGS(mode);
+  buildArena(mode);
+  setupHUD(mode);
+  setupControls();
+  document.getElementById('gover').classList.remove('show');
+
+  // Countdown
+  let cd=3;
+  showCD(cd);
+  const cdi=setInterval(()=>{
+    cd--;
+    if(cd>0) showCD(cd);
+    else{
+      const el=document.getElementById('cdOverlay');
+      if(el) el.remove();
+      clearInterval(cdi);
+      gameRunning=true;
+      gameTimerInterval=setInterval(tickTimer,1000);
+      gameLoop_af=requestAnimationFrame(tick);
+    }
+  },1000);
+}
+
+function showCD(n){
+  let el=document.getElementById('cdOverlay');
+  if(!el){el=document.createElement('div');el.id='cdOverlay';el.className='countdown';document.getElementById('s-game').appendChild(el);}
+  el.textContent=n;
+}
+
+function resetGS(mode){
+  Object.assign(GS,{
+    mode,
+    px: mode==='brawlball' ? W*0.35 : W*0.35,
+    py: mode==='brawlball' ? H*0.52 : H*0.55,
+    pHp:100,pMaxHp:100,
+    pdx:0,pdy:0,
+    pEmoji:selectedChar,
+    pGems:0,pStars:0,pBounty:2,pCubes:0,
+    superCharge:0,lastAtk:0,
+    timerSec: mode==='showdown'?120 : mode==='brawlball'?150 : mode==='knockout'?90 : mode==='bounty'?120 : mode==='heist'?150 : mode==='hotzone'?120 : 150,
+    blueScore:0,redScore:0,
+    enemies:[],bullets:[],gemObjs:[],powerCubes:[],walls:[],particles:[],
+    ballX:W/2,ballY:H/2,ballVX:0,ballVY:0,ballHolder:-1,
+    mySafeHp:100,enSafeHp:100,
+    mySafeX:80,mySafeY:H/2-20,
+    enSafeX:W-120,enSafeY:H/2-20,
+    poisonRadius:Math.max(W,H)*0.85,
+    alivePlayers:10,
+    koRound:1,koWins:0,koLosses:0,koAlive:true,koEnemiesAlive:2,
+    zones:[],captureProgress:0,
+    bountyBlue:0,bountyRed:0,
+    jdx:0,jdy:0,
+    mouseX:0,mouseY:0,
+    pRespawning:false,pRespawnTimer:0,
+    kills:0,damageDealt:0,lastDmgTime:0,
+  });
+
+  // Enemies
+  const botEmojis=['👹','👾','💀','🦹','👺','🤡','👿','🧟','👻','🤖'];
+  if(mode==='brawlball'){
+    // 3v3: oyuncu mavi takım (index 0,1 = mavi takım arkadaşları), kırmızı takım (index 2,3,4)
+    const bbData=[
+      // Mavi takım arkadaşları (team=0)
+      {em:'🟦',x:W*0.3,y:H*0.42,hp:100,name:randBotName(),team:0},
+      {em:'🟦',x:W*0.3,y:H*0.62,hp:100,name:randBotName(),team:0},
+      // Kırmızı takım (team=1)
+      {em:'🟥',x:W*0.65,y:H*0.35,hp:100,name:randBotName(),team:1},
+      {em:'🟥',x:W*0.65,y:H*0.55,hp:100,name:randBotName(),team:1},
+      {em:'🟥',x:W*0.65,y:H*0.70,hp:100,name:randBotName(),team:1},
+    ];
+    bbData.forEach((e,i)=>GS.enemies.push({...e,id:i,maxHp:e.hp,vx:0,vy:0,lastShot:0,gems:0,stars:0,bounty:2,cubes:0,alive:true,respawnTimer:0}));
+  } else {
+    const enemyData=[
+      {em:botEmojis[Math.floor(Math.random()*botEmojis.length)],x:W*0.65,y:H*0.35,hp:70,name:randBotName()},
+      {em:botEmojis[Math.floor(Math.random()*botEmojis.length)],x:W*0.7,y:H*0.6,hp:70,name:randBotName()},
+    ];
+    if(mode==='showdown'){
+      for(let i=0;i<7;i++) enemyData.push({em:botEmojis[i%botEmojis.length],x:100+Math.random()*(W-200),y:80+Math.random()*(H-160),hp:60+i*8,name:randBotName()});
+    }
+    enemyData.forEach((e,i)=>GS.enemies.push({...e,id:i,maxHp:e.hp,vx:0,vy:0,lastShot:0,gems:0,stars:0,bounty:2,cubes:0,alive:true,respawnTimer:0}));
+  }
+  GS.alivePlayers=GS.enemies.length+1;
+
+  // Walls
+  const wallConfigs={
+    gemgrab:[{x:0.2,y:0.2,w:80,h:20},{x:0.6,y:0.2,w:80,h:20},{x:0.2,y:0.7,w:80,h:20},{x:0.6,y:0.7,w:80,h:20},{x:0.38,y:0.38,w:60,h:15},{x:0.38,y:0.58,w:60,h:15}],
+    showdown:[{x:0.1,y:0.1,w:60,h:20},{x:0.5,y:0.15,w:80,h:20},{x:0.75,y:0.1,w:60,h:20},{x:0.15,y:0.5,w:20,h:80},{x:0.7,y:0.5,w:20,h:80},{x:0.3,y:0.7,w:80,h:20},{x:0.55,y:0.75,w:60,h:20}],
+    brawlball:[{x:0.05,y:0.25,w:60,h:15},{x:0.05,y:0.65,w:60,h:15},{x:0.75,y:0.25,w:60,h:15},{x:0.75,y:0.65,w:60,h:15},{x:0.35,y:0.2,w:80,h:15},{x:0.35,y:0.72,w:80,h:15}],
+    heist:[{x:0.2,y:0.2,w:80,h:20},{x:0.2,y:0.65,w:80,h:20},{x:0.55,y:0.2,w:80,h:20},{x:0.55,y:0.65,w:80,h:20},{x:0.35,y:0.4,w:20,h:80}],
+    bounty:[{x:0.15,y:0.2,w:70,h:20},{x:0.6,y:0.2,w:70,h:20},{x:0.15,y:0.7,w:70,h:20},{x:0.6,y:0.7,w:70,h:20},{x:0.38,y:0.45,w:80,h:15}],
+    hotzone:[{x:0.1,y:0.3,w:60,h:20},{x:0.7,y:0.3,w:60,h:20},{x:0.1,y:0.6,w:60,h:20},{x:0.7,y:0.6,w:60,h:20}],
+    knockout:[{x:0.2,y:0.25,w:70,h:20},{x:0.55,y:0.25,w:70,h:20},{x:0.2,y:0.65,w:70,h:20},{x:0.55,y:0.65,w:70,h:20},{x:0.4,y:0.45,w:20,h:60}],
+  };
+  (wallConfigs[mode]||wallConfigs.gemgrab).forEach(w=>GS.walls.push({x:w.x*W,y:w.y*H,w:w.w,h:w.h}));
+
+  // Mode-specific inits
+  if(mode==='gemgrab'){for(let i=0;i<4;i++)spawnGem();}
+  if(mode==='showdown'){for(let i=0;i<10;i++)spawnCube();}
+  if(mode==='hotzone'){
+    GS.zones=[
+      {x:W*0.25,y:H*0.4,r:55,ownedBy:-1,progress:0},
+      {x:W*0.5,y:H*0.5,r:55,ownedBy:-1,progress:0},
+      {x:W*0.75,y:H*0.4,r:55,ownedBy:-1,progress:0},
+    ];
+  }
+}
+
+function buildArena(mode){}// drawn in tick
+
+function setupHUD(mode){
+  const gemCtr=document.getElementById('gemCtr');
+  const safeHp=document.getElementById('safeHp');
+  const bountyInfo=document.getElementById('bountyInfo');
+  const koRounds=document.getElementById('koRounds');
+  const ggCD=document.getElementById('ggCountdown');
+  ggCD.classList.remove('show');
+  safeHp.style.display='none';
+  bountyInfo.style.display='none';
+  koRounds.innerHTML='';
+
+  if(mode==='gemgrab'){gemCtr.innerHTML='💎 <span id="blueScore" style="color:#00ccff;">0</span> vs <span id="redScore" style="color:#ff4444;">0</span>';}
+  else if(mode==='brawlball'){gemCtr.innerHTML='🔵 <span id="blueScore" style="color:#00ccff;">0</span> - <span id="redScore" style="color:#ff4444;">0</span> 🔴';}
+  else if(mode==='heist'){gemCtr.innerHTML='🏦'; safeHp.style.display='flex';}
+  else if(mode==='bounty'){gemCtr.innerHTML='⭐ <span id="blueScore" style="color:#00ccff;">0</span> vs <span id="redScore" style="color:#ff4444;">0</span>'; bountyInfo.style.display='block';}
+  else if(mode==='hotzone'){gemCtr.innerHTML='🔴 <span id="blueScore" style="color:#00ccff;">0</span>%';}
+  else if(mode==='knockout'){
+    gemCtr.innerHTML='👊 Tur <span id="blueScore" style="color:#00ccff;">1</span>/3';
+    for(let i=0;i<3;i++){const d=document.createElement('div');d.className='ko-r';d.id='kor_'+i;koRounds.appendChild(d);}
+  }
+  else if(mode==='showdown'){gemCtr.innerHTML='💀 Kalan: <span id="blueScore" style="color:#f7b731;">'+GS.alivePlayers+'</span>';}
+
+  const si=document.getElementById('scoreInfo');
+  const info={gemgrab:'10 gem tut → Zafer!',brawlball:'3v3 | 3 gol → Zafer!',heist:'Kasayı yok et!',bounty:'En çok yıldız!',showdown:'Son kalan kazanır!',hotzone:'Bölgeyi ele geçir!',knockout:'2 tur kazan!'};
+  si.textContent=info[mode]||'';
+
+  updateTimerDisplay();
+}
+
+// ============================================================
+// CONTROLS - global, bir kez kurulur
+// ============================================================
+const keys={};
+let controlsSetup=false;
+
+function setupControls(){
+  if(controlsSetup) return; // Sadece bir kez kur
+  controlsSetup=true;
+
+  // --- JOYSTICK (touch) ---
+  const joy=document.getElementById('joy');
+  const dot=document.getElementById('jdot');
+  let jActive=false, jBase={x:0,y:0};
+
+  const startJ=(x,y)=>{jActive=true;jBase={x,y};};
+  const moveJ=(x,y)=>{
+    if(!jActive)return;
+    const dx=x-jBase.x, dy=y-jBase.y;
+    const dist=Math.min(Math.hypot(dx,dy),32);
+    const a=Math.atan2(dy,dx);
+    dot.style.transform=`translate(${Math.cos(a)*dist}px,${Math.sin(a)*dist}px)`;
+    GS.jdx=Math.cos(a)*dist/32;
+    GS.jdy=Math.sin(a)*dist/32;
+  };
+  const endJ=()=>{jActive=false;dot.style.transform='';GS.jdx=0;GS.jdy=0;};
+
+  joy.addEventListener('mousedown',e=>{startJ(e.clientX,e.clientY);e.preventDefault();});
+  joy.addEventListener('touchstart',e=>{const t=e.touches[0];startJ(t.clientX,t.clientY);e.preventDefault();},{passive:false});
+  document.addEventListener('mousemove',e=>{moveJ(e.clientX,e.clientY);});
+  document.addEventListener('touchmove',e=>{if(jActive){const t=e.touches[0];moveJ(t.clientX,t.clientY);e.preventDefault();}},{passive:false});
+  document.addEventListener('mouseup',endJ);
+  document.addEventListener('touchend',endJ);
+
+  // --- KLAVYE: WASD + ok tuşları ---
+  document.addEventListener('keydown',e=>{
+    if(!gameRunning) return;
+    const k=e.code; // code kullan - dil bağımsız
+    keys[k]=true;
+    // Hareket güncelle
+    updateMovement();
+    if(e.code==='Space'){e.preventDefault();fireAtk();}
+    if(e.code==='KeyE') fireSuper();
+  });
+
+  document.addEventListener('keyup',e=>{
+    keys[e.code]=false;
+    updateMovement();
+  });
+
+  // --- MOUSE POSITION tracking (for aiming) ---
+  document.addEventListener('mousemove',e=>{
+    GS.mouseX=e.clientX;
+    GS.mouseY=e.clientY;
+  });
+
+  // --- MOUSE: sol tık = ateş/top vur, sağ tık = süper ---
+  const canvas=document.getElementById('gc');
+  canvas.addEventListener('mousedown',e=>{
+    if(!gameRunning) return;
+    e.preventDefault();
+    if(e.button===0) fireAtk();
+    if(e.button===2) fireSuper();
+  });
+  canvas.addEventListener('contextmenu',e=>e.preventDefault());
+}
+
+function updateMovement(){
+  const L=keys['KeyA']||keys['ArrowLeft'];
+  const R=keys['KeyD']||keys['ArrowRight'];
+  const U=keys['KeyW']||keys['ArrowUp'];
+  const D=keys['KeyS']||keys['ArrowDown'];
+  GS.jdx = R ? 1 : L ? -1 : 0;
+  GS.jdy = D ? 1 : U ? -1 : 0;
+}
+
+// ============================================================
+// GAME LOOP
+// ============================================================
+function tick(){
+  if(!gameRunning){gameLoop_af=requestAnimationFrame(tick);return;}
+  update();
+  render();
+  gameLoop_af=requestAnimationFrame(tick);
+}
+
+function update(){
+  const speed=1.7;
+
+  // Brawlball oyuncu yeniden doğma sistemi
+  if(GS.mode==='brawlball'&&GS.pRespawning){
+    GS.pRespawnTimer=(GS.pRespawnTimer||0)+1;
+    if(GS.pRespawnTimer>=180){ // 3 saniye
+      GS.pRespawning=false;GS.pRespawnTimer=0;
+      GS.pHp=GS.pMaxHp;
+      GS.px=W*0.25+Math.random()*60;GS.py=H*0.3+Math.random()*(H*0.4);
+      if(GS.ballHolder===0) GS.ballHolder=-1;
+    }
+  } else {
+    // Move player
+    let nx=GS.px+GS.jdx*speed;
+    let ny=GS.py+GS.jdy*speed;
+    if(!collides(nx,ny,44,44)){GS.px=Math.max(0,Math.min(W-44,nx));GS.py=Math.max(50,Math.min(H-110,ny));}
+
+    // Can yenilenmesi
+    const now2=Date.now();
+    if(now2-GS.lastDmgTime>3000&&GS.pHp<GS.pMaxHp){
+      GS.pHp=Math.min(GS.pMaxHp,GS.pHp+0.18);
+    }
+  }
+
+  // Mode-specific update
+  if(GS.mode==='gemgrab') updateGemGrab();
+  if(GS.mode==='showdown') updateShowdown();
+  if(GS.mode==='brawlball') updateBrawlBall();
+  if(GS.mode==='heist') updateHeist();
+  if(GS.mode==='bounty') updateBounty();
+  if(GS.mode==='hotzone') updateHotZone();
+  if(GS.mode==='knockout') updateKnockout();
+
+  updateEnemyAI();
+  updateBullets();
+  updateParticles();
+}
+
+function collides(x,y,w,h){
+  for(const wall of GS.walls){
+    if(x<wall.x+wall.w && x+w>wall.x && y<wall.y+wall.h && y+h>wall.y) return true;
+  }
+  return false;
+}
+
+// ============================================================
+// MODE UPDATES
+// ============================================================
+function updateGemGrab(){
+  // Collect nearby gems
+  GS.gemObjs=GS.gemObjs.filter(g=>{
+    if(Math.hypot(GS.px+16-g.x,GS.py+16-g.y)<28){
+      GS.pGems++;
+      GS.blueScore=GS.pGems;
+      addParticle(g.x,g.y,'💎');
+      sfx('gem');
+      spawnGem();
+      updScore();
+      // Check 10 gems
+      if(GS.pGems>=10){
+        const gg=document.getElementById('ggCountdown');
+        gg.classList.add('show');
+        // win condition handled in timer
+      }
+      return false;
+    }
+    // Enemy collects
+    GS.enemies.forEach(e=>{
+      if(!e.alive)return;
+      if(Math.hypot(e.x+16-g.x,e.y+16-g.y)<28){
+        e.gems=(e.gems||0)+1;
+        GS.redScore=GS.enemies.reduce((a,b)=>a+(b.gems||0),0);
+        updScore();
+      }
+    });
+    return true;
+  });
+  if(GS.gemObjs.length<3) spawnGem();
+}
+
+function updateShowdown(){
+  // Collect power cubes
+  GS.powerCubes=GS.powerCubes.filter(c=>{
+    if(Math.hypot(GS.px+16-c.x,GS.py+16-c.y)<24){
+      GS.pCubes++;
+      GS.pMaxHp=Math.min(200,100+GS.pCubes*10);
+      GS.pHp=Math.min(GS.pHp+15,GS.pMaxHp);
+      addParticle(c.x,c.y,'⬆️');
+      if(GS.powerCubes.length<5) spawnCube();
+      return false;
+    }
+    return true;
+  });
+  // Shrink poison
+  if(GS.poisonRadius>100) GS.poisonRadius-=0.15;
+  // Damage from poison
+  const cx=W/2, cy=H/2;
+  if(Math.hypot(GS.px+16-cx,GS.py+16-cy)>GS.poisonRadius){
+    GS.pHp=Math.max(0,GS.pHp-0.3);
+  }
+  GS.blueScore=GS.alivePlayers;
+  document.getElementById('blueScore').textContent=GS.alivePlayers;
+  if(GS.pHp<=0) endGame(false);
+}
+
+function updateBrawlBall(){
+  // Ball physics
+  GS.ballVX*=0.90; GS.ballVY*=0.90;
+  if(Math.abs(GS.ballVX)<0.05) GS.ballVX=0;
+  if(Math.abs(GS.ballVY)<0.05) GS.ballVY=0;
+
+  const goalY1=H*0.38, goalY2=H*0.62;
+
+  if(GS.ballHolder===-1){
+    GS.ballX+=GS.ballVX;
+    GS.ballY+=GS.ballVY;
+
+    // Wall bounce
+    if(GS.ballX<20){GS.ballX=20;GS.ballVX=Math.abs(GS.ballVX);}
+    if(GS.ballX>W-20){GS.ballX=W-20;GS.ballVX=-Math.abs(GS.ballVX);}
+    if(GS.ballY<58){GS.ballY=58;GS.ballVY=Math.abs(GS.ballVY);}
+    if(GS.ballY>H-80){GS.ballY=H-80;GS.ballVY=-Math.abs(GS.ballVY);}
+
+    // Bounce off walls
+    GS.walls.forEach(w=>{
+      if(GS.ballX>w.x&&GS.ballX<w.x+w.w&&GS.ballY>w.y&&GS.ballY<w.y+w.h){
+        GS.ballVX*=-0.7;GS.ballVY*=-0.7;
+      }
+    });
+
+    // Player (blue team) picks ball
+    if(Math.hypot(GS.px+22-GS.ballX,GS.py+22-GS.ballY)<32) GS.ballHolder=0;
+    // Enemies pick ball
+    GS.enemies.forEach((e,i)=>{
+      if(!e.alive)return;
+      if(Math.hypot(e.x+20-GS.ballX,e.y+20-GS.ballY)<30) GS.ballHolder=i+1;
+    });
+
+    // LEFT GOAL (blue's goal - red scores here)
+    if(GS.ballX<32&&GS.ballY>goalY1&&GS.ballY<goalY2){
+      GS.redScore++;sfx("goal");
+      showGoalAnim('🔴 KIRMIZI TAKIM GOL! '+GS.redScore+'-'+GS.blueScore,false);
+      resetBall();updScore();
+      if(GS.redScore>=2) endGame(false);
+    }
+    // RIGHT GOAL (red's goal - blue scores here)
+    if(GS.ballX>W-32&&GS.ballY>goalY1&&GS.ballY<goalY2){
+      GS.blueScore++;sfx("goal");
+      showGoalAnim('🔵 MAVİ TAKIM GOL! '+GS.blueScore+'-'+GS.redScore,true);
+      resetBall();updScore();
+      if(GS.blueScore>=2) endGame(true);
+    }
+  } else if(GS.ballHolder===0){
+    // Player carries ball
+    GS.ballX=GS.px+22; GS.ballY=GS.py+22;
+  } else {
+    const e=GS.enemies[GS.ballHolder-1];
+    if(e&&e.alive){GS.ballX=e.x+20;GS.ballY=e.y+20;}
+    else GS.ballHolder=-1;
+  }
+}
+
+function resetBall(){
+  GS.ballX=W/2;GS.ballY=H/2;GS.ballVX=0;GS.ballVY=0;GS.ballHolder=-1;
+  // Oyuncuyu ve botları resetle
+  GS.px=W*0.35;GS.py=H*0.52;
+  GS.enemies.forEach((e,i)=>{
+    if(e.team===0){e.x=W*0.3;e.y=H*(0.35+i*0.15);}
+    else{e.x=W*0.65;e.y=H*(0.35+(i-2)*0.18);}
+  });
+}
+
+function showGoalAnim(msg,isBlue){
+  const el=document.createElement('div');
+  el.className='goal-ind';
+  el.style.cssText='top:40%;left:50%;transform:translate(-50%,-50%);font-size:22px;padding:10px 20px;color:'+(isBlue?'#00ccff':'#ff4444')+';border-color:'+(isBlue?'#00ccff':'#ff4444')+';';
+  el.textContent=msg;
+  document.getElementById('s-game').appendChild(el);
+  setTimeout(()=>el.remove(),2000);
+}
+
+function updateHeist(){
+  // Player near enemy safe damages it
+  if(Math.hypot(GS.px+16-GS.enSafeX,GS.py+16-GS.enSafeY)<50){
+    GS.enSafeHp=Math.max(0,GS.enSafeHp-0.1);
+    GS.damageDealt+=0.1;
+    document.getElementById('enSafe').textContent=Math.round(GS.enSafeHp)+'%';
+    if(GS.enSafeHp<=0) endGame(true);
+  }
+  // Enemies near my safe
+  GS.enemies.forEach(e=>{
+    if(!e.alive)return;
+    if(Math.hypot(e.x+16-GS.mySafeX,e.y+16-GS.mySafeY)<50){
+      GS.mySafeHp=Math.max(0,GS.mySafeHp-0.06);
+      document.getElementById('mySafe').textContent=Math.round(GS.mySafeHp)+'%';
+      if(GS.mySafeHp<=0) endGame(false);
+    }
+  });
+}
+
+function updateBounty(){
+  const bi=document.getElementById('bountyInfo');
+  bi.innerHTML=`⭐ Sen: ${GS.bountyBlue} | Düşman: ${GS.bountyRed} | Bounty: ${GS.pBounty}`;
+}
+
+function updateHotZone(){
+  GS.zones.forEach(z=>{
+    const inZone=Math.hypot(GS.px+16-z.x,GS.py+16-z.y)<z.r;
+    const enemiesInZone=GS.enemies.filter(e=>e.alive&&Math.hypot(e.x+16-z.x,e.y+16-z.y)<z.r).length;
+    if(inZone&&!enemiesInZone){
+      z.progress=Math.min(100,z.progress+0.5);
+      if(z.progress>=100&&z.ownedBy!==0){z.ownedBy=0;GS.blueScore=Math.min(100,GS.blueScore+1);}
+    } else if(enemiesInZone&&!inZone){
+      z.progress=Math.max(0,z.progress-0.5);
+      if(z.progress<=0&&z.ownedBy!==1){z.ownedBy=1;GS.redScore=Math.min(100,GS.redScore+1);}
+    }
+  });
+  document.getElementById('blueScore').textContent=GS.blueScore+'%';
+  if(GS.blueScore>=100) endGame(true);
+  if(GS.redScore>=100) endGame(false);
+}
+
+function updateKnockout(){
+  if(!GS.koAlive) return;
+  // If no enemies alive, round won
+  if(GS.koEnemiesAlive<=0){
+    GS.koWins++;
+    document.getElementById('kor_'+(GS.koWins-1)).className='ko-r won';
+    if(GS.koWins>=2){endGame(true);return;}
+    toast('✅ Tur '+GS.koWins+' kazanıldı!');
+    nextKORound(true);
+  }
+}
+
+function nextKORound(win){
+  GS.koRound++;
+  GS.pHp=100;
+  GS.koAlive=true;
+  GS.koEnemiesAlive=2;
+  GS.timerSec=90;
+  GS.enemies.forEach(e=>{e.alive=true;e.hp=100;e.x=W*0.6+Math.random()*100;e.y=H*0.3+Math.random()*100;});
+  document.getElementById('blueScore').textContent=GS.koRound;
+}
+
+// ============================================================
+// ENEMY AI - Akıllı mod-farkında yapay zeka
+// ============================================================
+function updateEnemyAI(){
+  const now=Date.now();
+  const aliveEnemies=GS.enemies.filter(e=>e.alive);
+
+  GS.enemies.forEach((e,ei)=>{
+    if(!e.alive){
+      // Brawlball'da 3 saniye sonra yeniden doğ (180 frame ~3sn)
+      if(GS.mode==='brawlball'){
+        e.respawnTimer=(e.respawnTimer||0)+1;
+        if(e.respawnTimer>180){
+          e.alive=true;e.hp=e.maxHp;e.respawnTimer=0;
+          // Kendi taraf yarısında yeniden doğ
+          if(e.team===0){e.x=W*0.25+Math.random()*60;e.y=H*0.3+Math.random()*(H*0.4);}
+          else{e.x=W*0.65+Math.random()*60;e.y=H*0.3+Math.random()*(H*0.4);}
+        }
+        return;
+      }
+      if(GS.mode!=='showdown'&&GS.mode!=='knockout'){
+        e.respawnTimer=(e.respawnTimer||0)+1;
+        if(e.respawnTimer>180){e.alive=true;e.hp=e.maxHp;e.respawnTimer=0;e.name=randBotName();}
+      }
+      return;
+    }
+
+    const spd=GS.mode==='brawlball' ? 0.75 : 1.0;
+    const edx=GS.px-e.x, edy=GS.py-e.y;
+    const distToPlayer=Math.hypot(edx,edy);
+
+    // --- Hedef seç: oyuncu mu, gem mi, bölge mi, top mu? ---
+    let targetX=GS.px+16, targetY=GS.py+16;
+    let moveX=0,moveY=0;
+
+    if(GS.mode==='gemgrab'){
+      // Gem'e git önce, sonra oyuncuya
+      if(GS.gemObjs.length>0&&e.gems<5){
+        let closest=null,closestD=9999;
+        GS.gemObjs.forEach(g=>{const d=Math.hypot(e.x-g.x,e.y-g.y);if(d<closestD){closestD=d;closest=g;}});
+        if(closest){targetX=closest.x;targetY=closest.y;}
+        // gem topla
+        if(closestD<28){e.gems=(e.gems||0)+1;GS.redScore=GS.enemies.reduce((a,b)=>a+(b.gems||0),0);updScore();}
+      }
+    } else if(GS.mode==='brawlball'){
+      const isRedTeam=(e.team===1);
+      const isBlueTeam=(e.team===0||e.team===undefined);
+
+      // Rastgele gezinme — durağanlığı önle
+      if(!e.wanderX||Math.random()<0.008||Math.hypot(e.x-e.wanderX,e.y-e.wanderY)<20){
+        e.wanderX=80+Math.random()*(W-160);
+        e.wanderY=80+Math.random()*(H-160);
+      }
+
+      if(GS.ballHolder===ei+1){
+        // Top bu botta — rakip kaleye koş
+        if(isBlueTeam){targetX=W-50;targetY=H/2+( Math.random()<0.5?-40:40);}
+        else{targetX=50;targetY=H/2+(Math.random()<0.5?-40:40);}
+        const goalX=isBlueTeam?W-32:32;
+        const distToGoal=Math.hypot(e.x-goalX,e.y-H/2);
+        if(distToGoal<120||(Math.random()<0.01)){
+          GS.ballHolder=-1;
+          const pow=8+Math.random()*3;
+          const ang=Math.atan2(H/2-e.y,goalX-e.x)+(Math.random()-0.5)*0.3;
+          GS.ballVX=Math.cos(ang)*pow;
+          GS.ballVY=Math.sin(ang)*pow;
+          addParticle(e.x+20,e.y,'⚽');
+          sfx('kick');
+        }
+      } else if(GS.ballHolder===-1){
+        // Top serbest — ya topa git ya gez
+        const dBall=Math.hypot(e.x-GS.ballX,e.y-GS.ballY);
+        if(dBall<250){targetX=GS.ballX;targetY=GS.ballY;}
+        else{targetX=e.wanderX;targetY=e.wanderY;}
+      } else if(GS.ballHolder===0){
+        // Oyuncu tutuyorsa: kırmızı takım baskı yap, mavi takım pozisyon al
+        if(isRedTeam){
+          const dP=Math.hypot(e.x-GS.px,e.y-GS.py);
+          if(dP<200){targetX=GS.px+22;targetY=GS.py+22;}
+          else{targetX=e.wanderX;targetY=e.wanderY;}
+        } else {
+          // Mavi bot öne çık
+          targetX=W*0.75+Math.random()*40-20;
+          targetY=H/2+(Math.random()-0.5)*80;
+        }
+      } else {
+        const holder=GS.enemies[GS.ballHolder-1];
+        if(holder&&holder.alive){
+          const sameTeam=(holder.team===e.team);
+          if(sameTeam){
+            // Takım arkadaşı topla — öne koş
+            const goalX=isBlueTeam?W-50:50;
+            targetX=goalX;targetY=H/2+(Math.random()-0.5)*60;
+          } else {
+            // Rakip topla — ona git
+            const dH=Math.hypot(e.x-holder.x,e.y-holder.y);
+            if(dH<200){targetX=holder.x+20;targetY=holder.y+20;}
+            else{targetX=e.wanderX;targetY=e.wanderY;}
+          }
+        } else {targetX=GS.ballX;targetY=GS.ballY;}
+      }
+    } else if(GS.mode==='hotzone'){
+      // Bölgeye git
+      if(GS.zones&&GS.zones.length>0){
+        const freeZone=GS.zones.find(z=>z.ownedBy!==1)||GS.zones[0];
+        targetX=freeZone.x;targetY=freeZone.y;
+      }
+    } else if(GS.mode==='heist'){
+      // Kasaya git - oyuncuya değil
+      targetX=GS.mySafeX+20;targetY=GS.mySafeY+20;
+      if(Math.hypot(e.x+16-GS.mySafeX,e.y+16-GS.mySafeY)<50){
+        GS.mySafeHp=Math.max(0,GS.mySafeHp-0.05);
+        document.getElementById('mySafe').textContent=Math.round(GS.mySafeHp)+'%';
+        if(GS.mySafeHp<=0) endGame(false);
+      }
+    } else if(GS.mode==='showdown'){
+      // Power cube al veya oyuncuya git
+      if(GS.powerCubes.length>0){
+        let closest=null,closestD=9999;
+        GS.powerCubes.forEach(c=>{const d=Math.hypot(e.x-c.x,e.y-c.y);if(d<closestD){closestD=d;closest=c;}});
+        if(closest&&closestD<150){targetX=closest.x;targetY=closest.y;}
+      }
+      // Poison'dan kaç
+      const cx=W/2,cy=H/2;
+      if(Math.hypot(e.x+16-cx,e.y+16-cy)>GS.poisonRadius-40){
+        GS.enemies[ei].hp=Math.max(0,e.hp-0.5);
+        if(e.hp<=0){killEnemy(ei);return;}
+        // Merkeze doğru git
+        const tcd=Math.hypot(cx-e.x,cy-e.y);
+        if(tcd>0){targetX=cx;targetY=cy;}
+      }
+    }
+
+    // Hareketi uygula
+    const tdx=targetX-e.x-20, tdy=targetY-e.y-20;
+    const td=Math.hypot(tdx,tdy);
+    if(td>40&&td>0){
+      const nx=e.x+tdx/td*spd,ny=e.y+tdy/td*spd;
+      if(!collides(nx,ny,40,40)){e.x=nx;e.y=ny;}
+      else{
+        const ang=Math.random()*Math.PI*2;
+        const rx=e.x+Math.cos(ang)*spd,ry=e.y+Math.sin(ang)*spd;
+        if(!collides(rx,ry,40,40)){e.x=rx;e.y=ry;}
+      }
+    }
+
+    // Ateş et - takım modunda sadece rakibe
+    const fireRange=210;
+    const shootDelay=2200;
+    if(now-e.lastShot>shootDelay){
+      let shotTarget=null;
+      if(GS.mode==='brawlball'){
+        // Mavi takım (team=0) oyuncuya ateş etmez; kırmızı takıma ateş eder
+        // Kırmızı takım (team=1) oyuncuya ve mavi takım botlarına ateş eder
+        const isRedTeam=(e.team===1);
+        const isBlueTeam=(e.team===0||e.team===undefined);
+        if(isRedTeam){
+          // Oyuncu yakınsa ona, yoksa mavi bot'a
+          if(distToPlayer<fireRange&&Math.random()<0.6){
+            shotTarget={x:GS.px+22,y:GS.py+22};
+          } else {
+            const blueBots=aliveEnemies.filter(oe=>oe.id!==e.id&&(oe.team===0));
+            if(blueBots.length>0){
+              const bt=blueBots[Math.floor(Math.random()*blueBots.length)];
+              if(Math.hypot(e.x-bt.x,e.y-bt.y)<fireRange) shotTarget={x:bt.x+20,y:bt.y+20,targetEnemy:bt};
+            }
+          }
+        } else {
+          // Mavi bot → kırmızı botlara ateş et
+          const redBots=aliveEnemies.filter(oe=>oe.id!==e.id&&oe.team===1);
+          if(redBots.length>0){
+            const rt=redBots[Math.floor(Math.random()*redBots.length)];
+            if(Math.hypot(e.x-rt.x,e.y-rt.y)<fireRange) shotTarget={x:rt.x+20,y:rt.y+20,targetEnemy:rt};
+          }
+        }
+      } else {
+        // Diğer modlar - eskisi gibi rastgele hedef
+        if(Math.random()<0.6||aliveEnemies.length===1){
+          if(distToPlayer<fireRange) shotTarget={x:GS.px+22,y:GS.py+22,isPlayer:true};
+        } else {
+          const others=aliveEnemies.filter(oe=>oe.id!==e.id);
+          if(others.length>0){
+            const ot=others[Math.floor(Math.random()*others.length)];
+            if(Math.hypot(e.x-ot.x,e.y-ot.y)<fireRange) shotTarget={x:ot.x+20,y:ot.y+20,targetEnemy:ot};
+          }
+        }
+      }
+      if(shotTarget){
+        e.lastShot=now;
+        const sdx=shotTarget.x-e.x-20,sdy=shotTarget.y-e.y-20;
+        const sd=Math.hypot(sdx,sdy);
+        if(sd>0){
+          GS.bullets.push({x:e.x+20,y:e.y+20,vx:sdx/sd,vy:sdy/sd,friendly:false,dmg:12,life:60,fromEnemy:ei,fromTeam:e.team});
+        }
+      }
+    }
+
+    // Yakın saldırı - brawlball'da sadece rakibe
+    if(GS.mode==='brawlball'){
+      if(e.team===1&&distToPlayer<50){GS.pHp=Math.max(0,GS.pHp-0.25);GS.lastDmgTime=Date.now();if(GS.pHp<=0) endGame(false);}
+    } else {
+      if(distToPlayer<50){GS.pHp=Math.max(0,GS.pHp-0.3);GS.lastDmgTime=Date.now();if(GS.pHp<=0&&GS.mode!=='heist') endGame(false);}
+    }
+  });
+}
+
+// ============================================================
+// BULLETS
+// ============================================================
+function fireBulletRaw(x,y,vx,vy,friendly,dmg){
+  GS.bullets.push({x,y,vx,vy,friendly,dmg:dmg||20,life:55});
+}
+
+function fireAtk(){
+  if(!gameRunning) return;
+  const now=Date.now();
+  if(now-GS.lastAtk<380) return;
+  GS.lastAtk=now;
+
+  if(GS.mode==='brawlball'&&GS.ballHolder===0){
+    // Top mouse yönüne doğru vur
+    const mx=GS.mouseX, my=GS.mouseY;
+    const dx=mx-(GS.px+22), dy=my-(GS.py+22);
+    const dist=Math.hypot(dx,dy)||1;
+    GS.ballHolder=-1;
+    const pow=10+Math.random()*2;
+    GS.ballVX=(dx/dist)*pow;
+    GS.ballVY=(dy/dist)*pow;
+    addParticle(GS.px+22,GS.py,'⚽');
+    sfx('kick');
+    return;
+  }
+
+  sfx('shoot');
+  // Mouse yönüne ateş et
+  const mx=GS.mouseX||W/2, my=GS.mouseY||H/2;
+  const mdx=mx-(GS.px+22), mdy=my-(GS.py+22);
+  const md=Math.hypot(mdx,mdy)||1;
+  let tx=mdx/md, ty=mdy/md;
+  fireBulletRaw(GS.px+22,GS.py+22,tx,ty,true,20);
+  fireBulletRaw(GS.px+22,GS.py+22,tx+0.1,ty,true,20);
+  fireBulletRaw(GS.px+22,GS.py+22,tx-0.1,ty,true,20);
+  GS.superCharge=Math.min(100,GS.superCharge+10);
+  if(GS.superCharge>=100) document.getElementById('supBtn').classList.add('rdy');
+}
+
+function fireSuper(){
+  if(GS.superCharge<100){toast('⚡ Henüz hazır değil!');return;}
+  GS.superCharge=0;
+  sfx('super');
+  document.getElementById('supBtn').classList.remove('rdy');
+
+  if(GS.mode==='brawlball'&&GS.ballHolder===0){
+    const mx=GS.mouseX||W-50, my=GS.mouseY||H/2;
+    const dx=mx-(GS.px+22), dy=my-(GS.py+22);
+    const dist=Math.hypot(dx,dy)||1;
+    GS.ballHolder=-1;
+    GS.ballVX=(dx/dist)*18;
+    GS.ballVY=(dy/dist)*18;
+    toast('⚡ SÜPER VURUŞ!');
+    addParticle(GS.px+22,GS.py,'⚡');
+    sfx('kick');
+    return;
+  }
+  for(let a=0;a<8;a++){const r=a/8*Math.PI*2;fireBulletRaw(GS.px+22,GS.py+22,Math.cos(r),Math.sin(r),true,40);}
+  toast('⚡ SÜPER SALDIRI!');
+  addParticle(GS.px+22,GS.py,'💥');
+}
+
+function updateBullets(){
+  GS.bullets=GS.bullets.filter(b=>{
+    b.x+=b.vx*4.5;b.y+=b.vy*4.5;b.life--;
+    if(b.life<=0||b.x<0||b.x>W||b.y<0||b.y>H) return false;
+    if(collides(b.x,b.y,8,8)) return false;
+
+    if(b.friendly){
+      // Hit enemies — brawlball'da mavi takım botlarına çarpma
+      for(let i=GS.enemies.length-1;i>=0;i--){
+        const e=GS.enemies[i];
+        if(!e.alive)continue;
+        // Brawlball: oyuncu mavi takım, mavi bot arkadaşlara mermi çarpmasın
+        if(GS.mode==='brawlball'&&(e.team===0||e.team===undefined))continue;
+        if(Math.hypot(b.x-e.x-20,b.y-e.y-20)<28){
+          e.hp-=b.dmg;
+          GS.damageDealt+=b.dmg;
+          addParticle(e.x+20,e.y,'💥');
+          if(e.hp<=0) killEnemy(e,i);
+          return false;
+        }
+      }
+      // Hit enemy safe (heist)
+      if(GS.mode==='heist'&&Math.hypot(b.x-GS.enSafeX,b.y-GS.enSafeY)<40){
+        GS.enSafeHp=Math.max(0,GS.enSafeHp-8);
+        GS.damageDealt+=8;
+        document.getElementById('enSafe').textContent=Math.round(GS.enSafeHp)+'%';
+        addParticle(b.x,b.y,'🔥');
+        if(GS.enSafeHp<=0) endGame(true);
+        return false;
+      }
+    } else {
+      // Hit player — brawlball'da sadece kırmızı takım mermisi çarpar
+      if(!(GS.mode==='brawlball'&&b.fromTeam===0)){
+        if(Math.hypot(b.x-GS.px-22,b.y-GS.py-22)<28){
+          GS.pHp=Math.max(0,GS.pHp-b.dmg);
+          GS.lastDmgTime=Date.now();
+          addParticle(GS.px+22,GS.py,'❗');
+          sfx('hurt');
+          if(GS.pHp<=0){
+            if(GS.mode==='brawlball'){
+              GS.pRespawning=true;GS.pRespawnTimer=0;
+              if(GS.ballHolder===0) GS.ballHolder=-1;
+              toast('💀 3 saniye sonra yeniden doğuyorsun!');
+            } else {endGame(false);}
+          }
+          return false;
+        }
+      }
+      // Bot mermisi başka bota çarpsın
+      for(let i=GS.enemies.length-1;i>=0;i--){
+        const e=GS.enemies[i];
+        if(!e.alive)continue;
+        if(b.fromEnemy===i)continue;
+        // Brawlball'da aynı takım birbirini vurmaz
+        if(GS.mode==='brawlball'&&b.fromTeam===e.team)continue;
+        if(Math.hypot(b.x-e.x-20,b.y-e.y-20)<28){
+          e.hp-=b.dmg;
+          addParticle(e.x+20,e.y,'💥');
+          if(e.hp<=0) killEnemy(e,i);
+          return false;
+        }
+      }
+      // Hit my safe (heist)
+      if(GS.mode==='heist'&&Math.hypot(b.x-GS.mySafeX,b.y-GS.mySafeY)<40){
+        GS.mySafeHp=Math.max(0,GS.mySafeHp-6);
+        document.getElementById('mySafe').textContent=Math.round(GS.mySafeHp)+'%';
+        if(GS.mySafeHp<=0) endGame(false);
+        return false;
+      }
+    }
+    return true;
+  });
+}
+
+function killEnemy(e,i){
+  e.alive=false;
+  e.hp=0;
+  GS.kills++;
+  sfx('kill');
+  addParticle(e.x+16,e.y,'💀');
+  addKillFeed('💀 '+e.name+' elendi!');
+
+  // Drop gems
+  if(GS.mode==='gemgrab'&&e.gems>0){
+    for(let j=0;j<e.gems;j++){
+      const angle=Math.random()*Math.PI*2;
+      GS.gemObjs.push({x:e.x+Math.cos(angle)*20,y:e.y+Math.sin(angle)*20,anim:0});
+    }
+    e.gems=0;
+    GS.redScore=GS.enemies.reduce((a,b)=>a+(b.gems||0),0);
+    updScore();
+  }
+  // Drop stars (bounty)
+  if(GS.mode==='bounty'){
+    GS.bountyBlue+=e.bounty||2;
+    GS.blueScore=GS.bountyBlue;
+    updScore();
+  }
+  // Showdown
+  if(GS.mode==='showdown'){
+    GS.alivePlayers=GS.enemies.filter(e=>e.alive).length+1;
+    document.getElementById('blueScore').textContent=GS.alivePlayers;
+    if(GS.alivePlayers<=1) endGame(true);
+  }
+  // Knockout
+  if(GS.mode==='knockout'){
+    GS.koEnemiesAlive--;
+  }
+  // Respawn (non-showdown/knockout)
+  if(GS.mode!=='showdown'&&GS.mode!=='knockout'){
+    setTimeout(()=>{e.alive=true;e.hp=e.maxHp;e.x=W*0.6+Math.random()*120;e.y=H*0.25+Math.random()*100;e.name=randBotName();},4000);
+  }
+}
+
+// ============================================================
+// SPAWN
+// ============================================================
+function spawnGem(){
+  GS.gemObjs.push({x:W*0.35+Math.random()*W*0.3,y:H*0.3+Math.random()*H*0.35,anim:0});
+}
+function spawnCube(){
+  GS.powerCubes.push({x:60+Math.random()*(W-120),y:80+Math.random()*(H-180),anim:0});
+}
+
+// ============================================================
+// PARTICLES
+// ============================================================
+function addParticle(x,y,em){
+  GS.particles.push({x,y,em,life:45,vy:-1.2});
+}
+function updateParticles(){
+  GS.particles=GS.particles.filter(p=>{p.y+=p.vy;p.life--;return p.life>0;});
+}
+
+// ============================================================
+// KILL FEED
+// ============================================================
+function addKillFeed(msg){
+  const kf=document.getElementById('kfeed');
+  const el=document.createElement('div');
+  el.className='ki';el.textContent=msg;
+  kf.appendChild(el);
+  setTimeout(()=>el.remove(),3000);
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function tickTimer(){
+  if(!gameRunning) return;
+  GS.timerSec--;
+  updateTimerDisplay();
+  if(GS.timerSec<=0) timeUp();
+
+  // Gem grab countdown
+  if(GS.mode==='gemgrab'){
+    const gg=document.getElementById('ggCountdown');
+    if(GS.pGems>=10){
+      if(!GS.ggTimer) GS.ggTimer=15;
+      GS.ggTimer--;
+      gg.textContent='⏱️ '+GS.ggTimer+'s';
+      gg.classList.add('show');
+      if(GS.ggTimer<=0) endGame(true);
+    } else {
+      GS.ggTimer=null;
+      gg.classList.remove('show');
+    }
+  }
+}
+
+function updateTimerDisplay(){
+  const m=Math.floor(GS.timerSec/60);
+  const s=GS.timerSec%60;
+  document.getElementById('gtimer').textContent=m+':'+(s<10?'0':'')+s;
+}
+
+function timeUp(){
+  // Decide winner by mode
+  let win=false;
+  if(GS.mode==='gemgrab') win=GS.blueScore>GS.redScore;
+  else if(GS.mode==='brawlball') win=GS.blueScore>GS.redScore;
+  else if(GS.mode==='heist') win=GS.enSafeHp<GS.mySafeHp;
+  else if(GS.mode==='bounty') win=GS.bountyBlue>GS.bountyRed;
+  else if(GS.mode==='hotzone') win=GS.blueScore>GS.redScore;
+  else if(GS.mode==='knockout') win=GS.koWins>=2;
+  else if(GS.mode==='showdown') win=GS.alivePlayers<=3;
+  endGame(win);
+}
+
+function updScore(){
+  const bs=document.getElementById('blueScore');
+  const rs=document.getElementById('redScore');
+  if(bs) bs.textContent=GS.blueScore;
+  if(rs) rs.textContent=GS.redScore;
+}
+
+// ============================================================
+// END GAME
+// ============================================================
+function endGame(win){
+  if(!gameRunning) return;
+  gameRunning=false;
+  clearInterval(gameTimerInterval);
+  Object.keys(keys).forEach(k=>keys[k]=false); GS.jdx=0; GS.jdy=0;
+  // Tuş takılmalarını temizle
+  Object.keys(keys).forEach(k=>keys[k]=false);
+  GS.jdx=0;GS.jdy=0;
+  sfx(win?'win':'lose');
+
+  const ov=document.getElementById('gover');
+  const t=document.getElementById('gotitle');
+  t.textContent=win?'🏆 KAZANDIN!':'💀 KAYBETTİN!';
+  t.style.color=win?'#f7b731':'#ff4444';
+
+  const modeLabels={gemgrab:'Gem Grab',brawlball:'Brawl Ball',showdown:'Showdown',heist:'Heist',bounty:'Bounty',hotzone:'Hot Zone',knockout:'Knockout'};
+  document.getElementById('gstats').innerHTML=`
+    <div class="gsr"><span>🎮 Mod</span><span>${modeLabels[GS.mode]||GS.mode}</span></div>
+    <div class="gsr"><span>💀 Elenen</span><span>${GS.kills}</span></div>
+    <div class="gsr"><span>💥 Hasar</span><span>${Math.round(GS.damageDealt)}</span></div>
+    ${GS.mode==='gemgrab'?`<div class="gsr"><span>💎 Gem</span><span>${GS.pGems}</span></div>`:''}
+    ${GS.mode==='brawlball'?`<div class="gsr"><span>⚽ Gol</span><span>${GS.blueScore}</span></div>`:''}
+    <div class="gsr"><span>🏆 Kupa</span><span>${win?'+8':'-4'}</span></div>`;
+  ov.classList.add('show');
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+const BG_COLORS={
+  gemgrab:{bg:'#1a2a3a',tile:'#1e3040'},
+  showdown:{bg:'#2a1a10',tile:'#2e1e14'},
+  brawlball:{bg:'#0a2010',tile:'#0e2514'},
+  heist:{bg:'#1a1020',tile:'#1e1428'},
+  bounty:{bg:'#0a1a2a',tile:'#0e1e2e'},
+  hotzone:{bg:'#2a0a0a',tile:'#2e0e0e'},
+  knockout:{bg:'#1a0a2a',tile:'#1e0e2e'},
+};
+
+function render(){
+  const bc=BG_COLORS[GS.mode]||BG_COLORS.gemgrab;
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  ctx.fillStyle=bc.bg;
+  ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle=bc.tile;
+  ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Hot zones
+  if(GS.mode==='hotzone'){
+    GS.zones.forEach(z=>{
+      ctx.beginPath();ctx.arc(z.x,z.y,z.r,0,Math.PI*2);
+      ctx.fillStyle=z.ownedBy===0?'rgba(0,150,255,0.2)':z.ownedBy===1?'rgba(255,50,50,0.2)':'rgba(255,255,255,0.08)';
+      ctx.fill();
+      ctx.strokeStyle=z.ownedBy===0?'#0096ff':z.ownedBy===1?'#ff3232':'rgba(255,255,255,0.3)';
+      ctx.lineWidth=3;ctx.stroke();
+      // Progress arc
+      if(z.progress>0){
+        ctx.beginPath();ctx.arc(z.x,z.y,z.r,(-Math.PI/2),((-Math.PI/2)+(z.progress/100)*Math.PI*2));
+        ctx.strokeStyle='rgba(0,200,255,0.6)';ctx.lineWidth=5;ctx.stroke();
+      }
+      ctx.fillStyle='rgba(0,0,0,0.5)';
+      ctx.font='bold 11px Nunito';ctx.textAlign='center';
+      ctx.fillText('BÖLGE '+(GS.zones.indexOf(z)+1),z.x,z.y+4);
+    });
+  }
+
+  // Heist safes
+  if(GS.mode==='heist'){
+    // My safe
+    ctx.fillStyle='rgba(0,150,255,0.8)';
+    roundRect(ctx,GS.mySafeX-20,GS.mySafeY-20,40,40,8);ctx.fill();
+    ctx.font='20px serif';ctx.textAlign='center';ctx.fillText('🏦',GS.mySafeX,GS.mySafeY+6);
+    // Bar
+    ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(GS.mySafeX-20,GS.mySafeY+24,40,6);
+    ctx.fillStyle='#00aaff';ctx.fillRect(GS.mySafeX-20,GS.mySafeY+24,40*(GS.mySafeHp/100),6);
+    // Enemy safe
+    ctx.fillStyle='rgba(255,50,50,0.8)';
+    roundRect(ctx,GS.enSafeX-20,GS.enSafeY-20,40,40,8);ctx.fill();
+    ctx.fillText('🏦',GS.enSafeX,GS.enSafeY+6);
+    ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(GS.enSafeX-20,GS.enSafeY+24,40,6);
+    ctx.fillStyle='#ff4444';ctx.fillRect(GS.enSafeX-20,GS.enSafeY+24,40*(GS.enSafeHp/100),6);
+  }
+
+  // Goals (brawl ball)
+  if(GS.mode==='brawlball'){
+    const gy1=H*0.38,gy2=H*0.62,gw=34;
+    // Saha çizgileri
+    ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(W/2,50);ctx.lineTo(W/2,H-70);ctx.stroke();
+    ctx.beginPath();ctx.arc(W/2,H/2,60,0,Math.PI*2);ctx.stroke();
+
+    // Mavi kale (sol) - kırmızı takım buraya atar
+    ctx.save();
+    ctx.fillStyle='rgba(0,80,200,0.25)';ctx.fillRect(0,gy1,gw,gy2-gy1);
+    ctx.strokeStyle='#0066ff';ctx.lineWidth=3;ctx.strokeRect(0,gy1,gw,gy2-gy1);
+    // Kale direği efekti
+    ctx.fillStyle='rgba(0,120,255,0.5)';ctx.fillRect(0,gy1,6,gy2-gy1);
+    ctx.fillStyle='rgba(0,120,255,0.5)';ctx.fillRect(gw-4,gy1,4,gy2-gy1);
+    ctx.font='bold 9px Nunito';ctx.fillStyle='#4499ff';ctx.textAlign='center';
+    ctx.fillText('MAVİ',gw/2,gy1-5);
+    ctx.restore();
+
+    // Kırmızı kale (sağ) - mavi takım buraya atar
+    ctx.save();
+    ctx.fillStyle='rgba(200,30,30,0.25)';ctx.fillRect(W-gw,gy1,gw,gy2-gy1);
+    ctx.strokeStyle='#ff3333';ctx.lineWidth=3;ctx.strokeRect(W-gw,gy1,gw,gy2-gy1);
+    ctx.fillStyle='rgba(255,60,60,0.5)';ctx.fillRect(W-gw,gy1,6,gy2-gy1);
+    ctx.fillStyle='rgba(255,60,60,0.5)';ctx.fillRect(W-6,gy1,6,gy2-gy1);
+    ctx.font='bold 9px Nunito';ctx.fillStyle='#ff6666';ctx.textAlign='center';
+    ctx.fillText('KIRMIZI',W-gw/2,gy1-5);
+    ctx.restore();
+
+    // Top - 3D görünüm
+    const ballAnim=(Date.now()/300)%Math.PI*2;
+    ctx.save();
+    ctx.translate(GS.ballX,GS.ballY);
+    // Top gölgesi
+    ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(2,14,11,4,0,0,Math.PI*2);ctx.fill();
+    // Ana top
+    const ballGrad=ctx.createRadialGradient(-4,-4,2,0,0,14);
+    ballGrad.addColorStop(0,'#ffffff');
+    ballGrad.addColorStop(0.3,'#dddddd');
+    ballGrad.addColorStop(0.7,'#888888');
+    ballGrad.addColorStop(1,'#333333');
+    ctx.fillStyle=ballGrad;
+    ctx.beginPath();ctx.arc(0,0,13,0,Math.PI*2);ctx.fill();
+    // Top deseni
+    ctx.strokeStyle='rgba(0,0,0,0.5)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(0,0,13,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-13,0);ctx.lineTo(13,0);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,-13);ctx.lineTo(0,13);ctx.stroke();
+    // Parlama
+    ctx.fillStyle='rgba(255,255,255,0.35)';ctx.beginPath();ctx.ellipse(-4,-5,5,3,Math.PI/4,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+
+  // Showdown: poison ring
+  if(GS.mode==='showdown'){
+    const cx=W/2,cy=H/2;
+    ctx.beginPath();ctx.arc(cx,cy,GS.poisonRadius,0,Math.PI*2);
+    ctx.strokeStyle='rgba(100,200,50,0.5)';ctx.lineWidth=3;ctx.stroke();
+    // Poison outside
+    ctx.save();
+    ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(cx,cy,GS.poisonRadius,0,Math.PI*2,true);
+    ctx.closePath();ctx.fillStyle='rgba(50,150,20,0.25)';ctx.fill();
+    ctx.restore();
+    // Power cube boxes
+    GS.powerCubes.forEach(c=>{
+      ctx.fillStyle='rgba(200,150,0,0.8)';
+      roundRect(ctx,c.x-14,c.y-14,28,28,6);ctx.fill();
+      ctx.font='14px serif';ctx.textAlign='center';ctx.fillText('📦',c.x,c.y+5);
+    });
+  }
+
+  // Walls
+  ctx.fillStyle='#5a3a1a';
+  ctx.strokeStyle='#3a2000';
+  ctx.lineWidth=2;
+  GS.walls.forEach(w=>{roundRect(ctx,w.x,w.y,w.w,w.h,5);ctx.fill();ctx.stroke();});
+
+  // Gems
+  if(GS.mode!=='brawlball'){
+    GS.gemObjs.forEach(g=>{
+      g.anim=(g.anim||0)+0.05;
+      ctx.font='18px serif';ctx.textAlign='center';
+      ctx.save();ctx.translate(g.x,g.y+Math.sin(g.anim)*3);ctx.rotate(g.anim*0.3);ctx.fillText('💎',0,6);ctx.restore();
+    });
+  }
+
+  // Bounty blue star
+  if(GS.mode==='bounty'){
+    ctx.font='22px serif';ctx.textAlign='center';
+    ctx.fillText('⭐',W/2,H/2+8);
+  }
+
+  // Enemies
+  GS.enemies.forEach(e=>{
+    if(!e.alive) return;
+    const S=40;
+    const cx=e.x+S/2, cy=e.y+S/2;
+    const isBB=GS.mode==='brawlball';
+    const isBlue=isBB&&(e.team===0||e.team===undefined);
+    const isRed=isBB&&e.team===1;
+    const baseColor=isBlue?'rgba(0,80,220,':'isRed'?'rgba(220,30,30,':'rgba(180,20,20,';
+    const bodyColor=isBlue?'rgba(0,100,255,0.75)':isRed?'rgba(220,40,40,0.75)':'rgba(180,20,20,0.6)';
+    const glowColor=isBlue?'rgba(0,150,255,0.5)':isRed?'rgba(255,60,60,0.5)':'rgba(255,60,60,0.4)';
+    const rimColor=isBlue?'rgba(100,200,255,0.9)':isRed?'rgba(255,120,120,0.9)':'rgba(255,80,80,0.7)';
+
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,0.35)';ctx.beginPath();ctx.ellipse(cx,e.y+S+10,S/2-2,6,0,0,Math.PI*2);ctx.fill();
+
+    // 3D Base glow
+    ctx.save();
+    ctx.shadowColor=glowColor;ctx.shadowBlur=14;
+    ctx.fillStyle=bodyColor;
+    roundRect(ctx,e.x,e.y,S,S,13);ctx.fill();
+    ctx.restore();
+
+    // 3D Top highlight (lighter stripe at top)
+    ctx.save();
+    const hlGrad=ctx.createLinearGradient(e.x,e.y,e.x,e.y+S*0.45);
+    hlGrad.addColorStop(0,'rgba(255,255,255,0.28)');
+    hlGrad.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=hlGrad;
+    roundRect(ctx,e.x,e.y,S,S,13);ctx.fill();
+    ctx.restore();
+
+    // 3D Rim/border
+    ctx.strokeStyle=rimColor;ctx.lineWidth=2;
+    roundRect(ctx,e.x,e.y,S,S,13);ctx.stroke();
+
+    // Emoji
+    ctx.font=(S-2)+'px serif';ctx.textAlign='center';ctx.fillText(e.em,cx,e.y+S-3);
+
+    // Team badge (brawlball)
+    if(isBB){
+      ctx.fillStyle=isBlue?'#003dcc':'#cc1a1a';
+      ctx.beginPath();ctx.arc(e.x+S-7,e.y+7,7,0,Math.PI*2);ctx.fill();
+      ctx.font='bold 8px Nunito';ctx.fillStyle='#fff';ctx.textAlign='center';
+      ctx.fillText(isBlue?'M':'K',e.x+S-7,e.y+10);
+    }
+
+    // HP bar
+    ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillRect(e.x,e.y-10,S,6);
+    ctx.fillStyle=isBlue?'#00aaff':isRed?'#ff4444':'#ff4444';
+    ctx.fillRect(e.x,e.y-10,S*(Math.max(0,e.hp)/e.maxHp),6);
+    ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.strokeRect(e.x,e.y-10,S,6);
+
+    // Name
+    ctx.font='bold 9px Nunito';ctx.fillStyle=isBlue?'#80cfff':isRed?'#ff9999':'rgba(255,255,255,0.85)';
+    ctx.textAlign='center';ctx.fillText(e.name,cx,e.y-13);
+
+    if(e.gems>0){ctx.font='bold 10px Nunito';ctx.fillStyle='#00ccff';ctx.fillText('💎'+e.gems,cx,e.y+S+16);}
+    if(GS.mode==='bounty'){ctx.font='bold 10px Nunito';ctx.fillStyle='#f7b731';ctx.fillText('⭐'+(e.bounty||2),cx,e.y+S+16);}
+  });
+
+  // Player - 3D blue
+  const PS=44;
+  const pcx=GS.px+PS/2,pcy=GS.py+PS/2;
+  const isBBp=GS.mode==='brawlball';
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.35)';ctx.beginPath();ctx.ellipse(pcx,GS.py+PS+10,PS/2-2,6,0,0,Math.PI*2);ctx.fill();
+  // 3D glow
+  ctx.save();
+  ctx.shadowColor=isBBp?'rgba(0,180,255,0.7)':'rgba(60,120,255,0.6)';ctx.shadowBlur=18;
+  ctx.fillStyle=isBBp?'rgba(0,100,255,0.85)':'rgba(20,80,180,0.8)';
+  roundRect(ctx,GS.px,GS.py,PS,PS,14);ctx.fill();
+  ctx.restore();
+  // Highlight
+  ctx.save();
+  const phlGrad=ctx.createLinearGradient(GS.px,GS.py,GS.px,GS.py+PS*0.45);
+  phlGrad.addColorStop(0,'rgba(255,255,255,0.35)');phlGrad.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=phlGrad;roundRect(ctx,GS.px,GS.py,PS,PS,14);ctx.fill();
+  ctx.restore();
+  // Rim
+  ctx.strokeStyle=isBBp?'rgba(100,200,255,0.95)':'rgba(100,180,255,0.85)';ctx.lineWidth=2.5;
+  roundRect(ctx,GS.px,GS.py,PS,PS,14);ctx.stroke();
+  // Emoji
+  ctx.font=(PS-2)+'px serif';ctx.textAlign='center';ctx.fillText(GS.pEmoji,pcx,GS.py+PS-3);
+  // Team badge
+  if(isBBp){
+    ctx.fillStyle='#003dcc';ctx.beginPath();ctx.arc(GS.px+PS-7,GS.py+7,8,0,Math.PI*2);ctx.fill();
+    ctx.font='bold 9px Nunito';ctx.fillStyle='#fff';ctx.textAlign='center';ctx.fillText('M',GS.px+PS-7,GS.py+11);
+  }
+  // HP bar
+  ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillRect(GS.px,GS.py-10,PS,6);
+  const hpColor=GS.pHp>60?'#26c05a':GS.pHp>30?'#f7b731':'#ff4444';
+  ctx.fillStyle=hpColor;ctx.fillRect(GS.px,GS.py-10,PS*(GS.pHp/GS.pMaxHp),6);
+  ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.strokeRect(GS.px,GS.py-10,PS,6);
+  // Name
+  ctx.font='bold 9px Nunito';ctx.fillStyle=isBBp?'#80cfff':'rgba(255,255,255,0.95)';
+  ctx.textAlign='center';ctx.fillText('Sen',pcx,GS.py-13);
+  if(GS.pGems>0){ctx.font='bold 11px Nunito';ctx.fillStyle='#00ccff';ctx.fillText('💎'+GS.pGems,pcx,GS.py+PS+16);}
+  if(GS.pCubes>0){ctx.font='bold 11px Nunito';ctx.fillStyle='#f7b731';ctx.fillText('⬆️'+GS.pCubes,pcx,GS.py+PS+16);}
+
+  // Brawlball respawn countdown overlay
+  if(GS.mode==='brawlball'&&GS.pRespawning){
+    const secLeft=Math.ceil((180-GS.pRespawnTimer)/60);
+    ctx.save();
+    ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillRect(W/2-70,H/2-40,140,80);
+    ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=2;ctx.strokeRect(W/2-70,H/2-40,140,80);
+    ctx.font='bold 13px Nunito';ctx.fillStyle='rgba(255,255,255,0.7)';ctx.textAlign='center';
+    ctx.fillText('💀 ÖLDÜN',W/2,H/2-15);
+    ctx.font='bold 32px Nunito';ctx.fillStyle='#f7b731';
+    ctx.fillText(secLeft,W/2,H/2+20);
+    ctx.font='bold 10px Nunito';ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.fillText('saniye sonra doğuyorsun',W/2,H/2+38);
+    ctx.restore();
+  }
+
+  // Bullets
+  GS.bullets.forEach(b=>{
+    const isBlueTeamBullet=b.friendly||(GS.mode==='brawlball'&&b.fromTeam===0);
+    ctx.beginPath();ctx.arc(b.x,b.y,5,0,Math.PI*2);
+    ctx.fillStyle=isBlueTeamBullet?'#00aaff':'#ff6644';ctx.fill();
+    ctx.shadowColor=isBlueTeamBullet?'#00aaff':'#ff4444';ctx.shadowBlur=8;ctx.fill();ctx.shadowBlur=0;
+  });
+
+  // Particles
+  GS.particles.forEach(p=>{
+    ctx.font='16px serif';ctx.textAlign='center';ctx.globalAlpha=p.life/45;
+    ctx.fillText(p.em,p.x,p.y+6);ctx.globalAlpha=1;
+  });
+
+  // Showdown poison indicator
+  if(GS.mode==='showdown'){
+    const cx=W/2,cy=H/2;
+    const dist=Math.hypot(GS.px+16-cx,GS.py+16-cy);
+    if(dist>GS.poisonRadius-30){
+      ctx.fillStyle='rgba(255,50,50,0.7)';
+      ctx.font='bold 11px Nunito';ctx.textAlign='center';
+      ctx.fillText('⚠️ ZEHİRLİ BÖLGE',W/2,H-95);
+    }
+  }
+
+  // Player health bar on HUD (persistent)
+  drawPlayerHUDBar();
+}
+
+function drawPlayerHUDBar(){
+  const bw=90,bh=8,bx=W/2-45,by=H-110;
+  ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(bx,by,bw,bh);
+  const hpColor=GS.pHp>60?'#26c05a':GS.pHp>30?'#f7b731':'#ff4444';
+  ctx.fillStyle=hpColor;ctx.fillRect(bx,by,bw*(GS.pHp/GS.pMaxHp),bh);
+  ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;ctx.strokeRect(bx,by,bw,bh);
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
+window.addEventListener('resize',()=>{
+  if(document.getElementById('s-game').classList.contains('active')){
+    canvas.width=window.innerWidth;canvas.height=window.innerHeight;W=canvas.width;H=canvas.height;
+  }
+});
+</script>
+<!-- CLUB -->
+<div class="screen" id="s-club">
+  <div style="background:linear-gradient(160deg,#0d2a1a,#1a0d3e);height:100%;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="sh" style="background:linear-gradient(135deg,#1a6b40,#9b26c0);">
+      <button class="back" onclick="goTo('main')">◀ Geri</button>
+      <span style="font-family:'Lilita One',cursive;font-size:16px;color:#fff;">🛡️ KULÜP</span>
+      <span style="font-size:10px;color:rgba(255,255,255,0.7);">Üyeler: 28/30</span>
+    </div>
+    <div style="padding:12px;overflow-y:auto;flex:1;">
+      <!-- Club banner -->
+      <div style="background:linear-gradient(135deg,#1a6b40,#0d3020);border-radius:16px;padding:16px;margin-bottom:12px;text-align:center;border:2px solid #26c05a;">
+        <div style="font-size:44px;">🛡️</div>
+        <div style="font-family:'Lilita One',cursive;font-size:22px;color:#26c05a;">Anadolu Kartalları</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px;">#TR-ANADOLU • Türkiye 🇹🇷</div>
+        <div style="display:flex;justify-content:center;gap:20px;margin-top:12px;">
+          <div style="text-align:center;"><div style="font-family:'Lilita One',cursive;font-size:20px;color:#f7b731;">986</div><div style="font-size:9px;color:rgba(255,255,255,0.5);">KUPA</div></div>
+          <div style="text-align:center;"><div style="font-family:'Lilita One',cursive;font-size:20px;color:#26c05a;">28</div><div style="font-size:9px;color:rgba(255,255,255,0.5);">ÜYE</div></div>
+          <div style="text-align:center;"><div style="font-family:'Lilita One',cursive;font-size:20px;color:#00d4ff;">47</div><div style="font-size:9px;color:rgba(255,255,255,0.5);">SIRA</div></div>
+        </div>
+      </div>
+      <!-- Club members -->
+      <div style="font-family:'Lilita One',cursive;font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:8px;">ÜYELEİR</div>
+      <div id="clubMembers"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BRAWL PASS -->
+<div class="screen" id="s-brawlpass">
+  <div style="background:linear-gradient(160deg,#1a0d3e,#2a0a5e,#0d1b3e);height:100%;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="sh" style="background:linear-gradient(135deg,#6c3fc5,#9b26c0);">
+      <button class="back" onclick="goTo('main')">◀ Geri</button>
+      <span style="font-family:'Lilita One',cursive;font-size:16px;color:#fff;">⭐ BRAWL PASS</span>
+      <span style="font-size:10px;color:rgba(255,255,255,0.7);">Sezon 24</span>
+    </div>
+    <div style="padding:12px;overflow-y:auto;flex:1;">
+      <!-- Pass banner -->
+      <div style="background:linear-gradient(135deg,#2d1b6e,#6c3fc5);border-radius:16px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at top right,rgba(255,200,0,0.2),transparent 60%);"></div>
+        <div style="font-family:'Lilita One',cursive;font-size:20px;color:#f7b731;position:relative;">BRAWL PASS+</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:4px;position:relative;">169 TL / Sezon • 2x kupa bonusu • Özel kostüm</div>
+        <div style="display:flex;gap:8px;margin-top:10px;position:relative;">
+          <div style="background:rgba(247,183,49,0.2);border:2px solid #f7b731;border-radius:10px;padding:6px 10px;text-align:center;flex:1;">
+            <div style="font-size:18px;">🎭</div><div style="font-size:9px;font-weight:900;color:#f7b731;">Özel Kostüm</div>
+          </div>
+          <div style="background:rgba(247,183,49,0.2);border:2px solid #f7b731;border-radius:10px;padding:6px 10px;text-align:center;flex:1;">
+            <div style="font-size:18px;">💎</div><div style="font-size:9px;font-weight:900;color:#f7b731;">170 Elmas</div>
+          </div>
+          <div style="background:rgba(247,183,49,0.2);border:2px solid #f7b731;border-radius:10px;padding:6px 10px;text-align:center;flex:1;">
+            <div style="font-size:18px;">⭐</div><div style="font-size:9px;font-weight:900;color:#f7b731;">Starr Puanı</div>
+          </div>
+        </div>
+        <button onclick="toast('Brawl Pass aktif edildi! ⭐')" style="margin-top:12px;width:100%;background:linear-gradient(135deg,#f7b731,#f0820a);border:none;border-radius:12px;padding:12px;font-family:'Lilita One',cursive;font-size:16px;color:#3d1500;cursor:pointer;position:relative;">⭐ SATIN AL - 169 ₺</button>
+      </div>
+      <!-- Free pass -->
+      <div style="background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.12);border-radius:14px;padding:12px;margin-bottom:16px;">
+        <div style="font-family:'Lilita One',cursive;font-size:14px;color:#fff;margin-bottom:8px;">ÜCRETSİZ PASS</div>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;" id="bpFreeRewards"></div>
+      </div>
+      <!-- Premium pass -->
+      <div style="background:linear-gradient(135deg,rgba(108,63,197,0.15),rgba(155,38,192,0.15));border:2px solid rgba(108,63,197,0.4);border-radius:14px;padding:12px;margin-bottom:16px;">
+        <div style="font-family:'Lilita One',cursive;font-size:14px;color:#c084fc;margin-bottom:8px;">⭐ PREMİUM PASS</div>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;" id="bpPremRewards"></div>
+      </div>
+      <!-- XP bar -->
+      <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:11px;font-weight:900;color:#fff;">Tier 12 / 70</span>
+          <span style="font-size:11px;color:rgba(255,255,255,0.5);">4,820 / 5,000 XP</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:8px;height:10px;overflow:hidden;">
+          <div style="width:96%;height:100%;background:linear-gradient(90deg,#6c3fc5,#c084fc);border-radius:8px;"></div>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:6px;text-align:center;">Sonraki ödül: 💎 30 Elmas</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TROPHY ROAD -->
+<div class="screen" id="s-trophyroad">
+  <div style="background:linear-gradient(160deg,#1a2a0a,#0d1b3e);height:100%;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="sh" style="background:linear-gradient(135deg,#f7b731,#e87810);">
+      <button class="back" onclick="goTo('main')">◀ Geri</button>
+      <span style="font-family:'Lilita One',cursive;font-size:16px;color:#3d1500;">🏆 KUPA YOLU</span>
+      <span style="font-size:10px;color:rgba(61,21,0,0.7);">651 / 50,000 🏆</span>
+    </div>
+    <div style="padding:12px;overflow-y:auto;flex:1;" id="trophyRoadList"></div>
+  </div>
+</div>
+
+<!-- RANKING / LEADERBOARD -->
+<div class="screen" id="s-ranking">
+  <div style="background:linear-gradient(160deg,#0d1b3e,#1a1a2e);height:100%;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="sh">
+      <button class="back" onclick="goTo('main')">◀ Geri</button>
+      <span style="font-family:'Lilita One',cursive;font-size:16px;color:#fff;">🏅 SIRALAMA</span>
+      <span style="font-size:10px;color:rgba(255,255,255,0.5);">Yerel • Küresel</span>
+    </div>
+    <div style="display:flex;gap:0;border-bottom:2px solid rgba(255,255,255,0.1);">
+      <button onclick="showRankTab('local',this)" class="rank-tab active" style="flex:1;padding:10px;background:transparent;border:none;font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;color:#fff;cursor:pointer;border-bottom:3px solid #f7b731;">🇹🇷 Türkiye</button>
+      <button onclick="showRankTab('global',this)" class="rank-tab" style="flex:1;padding:10px;background:transparent;border:none;font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;border-bottom:3px solid transparent;">🌍 Küresel</button>
+      <button onclick="showRankTab('friends',this)" class="rank-tab" style="flex:1;padding:10px;background:transparent;border:none;font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;border-bottom:3px solid transparent;">👥 Arkadaş</button>
+    </div>
+    <div style="overflow-y:auto;flex:1;" id="rankList"></div>
+  </div>
+</div>
+
+<!-- SHOP -->
+
+<div class="screen" id="s-shop">
+  <div class="sh">
+    <button class="back" onclick="goTo('main')">◀ Geri</button>
+    <div class="stitle">🛒 DÜKKAN</div>
+    <div style="display:flex;gap:5px;">
+      <div class="cur" style="font-size:11px;font-weight:900;color:#fff;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.15);border-radius:18px;padding:3px 8px;display:flex;align-items:center;gap:3px;">💎 <span id="shopGems">44</span></div>
+      <div class="cur" style="font-size:11px;font-weight:900;color:#fff;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.15);border-radius:18px;padding:3px 8px;display:flex;align-items:center;gap:3px;">🪙 <span id="shopCoins">5070</span></div>
+    </div>
+  </div>
+  <div class="shop-tabs" id="shopTabs">
+    <div class="shop-tab active" onclick="shopTab('featured',this)">⭐ ÖNE ÇIKAN</div>
+    <div class="shop-tab" onclick="shopTab('brawlers',this)">⚔️ SAVAŞÇILAR</div>
+    <div class="shop-tab" onclick="shopTab('skins',this)">🎨 KOSTÜMLER</div>
+    <div class="shop-tab" onclick="shopTab('gems',this)">💎 ELMALAR</div>
+    <div class="shop-tab" onclick="shopTab('offers',this)">🎁 TEKLİFLER</div>
+  </div>
+  <div class="shop-body" id="shopBody"></div>
+</div>
+
+<script>
+// ============================================================
+// SHOP
+// ============================================================
+let shopGems=44, shopCoins=5070;
+
+const SHOP_DATA={
+  featured:{
+    banner:{icon:'🎉',title:'GÜNLÜK DÜKKAN',sub:'Her gün yeni ürünler!',timer:'23:14:05'},
+    sections:[
+      {title:'⭐ GÜNLÜK TEKLİFLER',items:[
+        {em:'🎁',name:'Ücretsiz Ürün',type:'Günlük Hediye',price:'free',badge:'ÜCRETSİZ',badgeClass:'new'},
+        {em:'💎',name:'Elmas Paketi',type:'35 Elmas',price:'gem',amount:80,badge:'YENİ',badgeClass:'new'},
+        {em:'🪙',name:'Altın',type:'150 Altın',price:'coin',amount:80,badge:'',badgeClass:''},
+        {em:'🎀',name:'Shelly Kostüm',type:'Kostüm - Epik',price:'gem',amount:149,badge:'SINIRLI',badgeClass:'sale'},
+      ]},
+      {title:'🔥 SÜPER FIRSAT',items:[
+        {em:'🤖',name:'Robo Mike',type:'Kostüm - Nadir',price:'gem',amount:79,badge:'İNDİRİM',badgeClass:'sale',oldPrice:99},
+        {em:'🌊',name:'Surf Brock',type:'Kostüm - Epik',price:'gem',amount:149,badge:'',badgeClass:''},
+        {em:'💣',name:'Dinamike',type:'Savaşçı - Süper Nadir',price:'coin',amount:6000,badge:'',badgeClass:''},
+        {em:'🐧',name:'Mr. P',type:'Savaşçı - Mistik',price:'gem',amount:299,badge:'',badgeClass:''},
+      ]},
+    ],
+    wide:[
+      {em:'⭐',name:'STARR PASİ',sub:'Sezon ödülleri, özel kostüm ve daha fazlası!',price:'gem',amount:169},
+    ]
+  },
+  brawlers:{
+    sections:[
+      {title:'🆕 YENİ SAVAŞÇILAR',items:[
+        {em:'🦇',name:'Mortis',type:'Mistik Savaşçı',price:'gem',amount:299,badge:'YENİ',badgeClass:'new'},
+        {em:'🌵',name:'Spike',type:'Efsane Savaşçı',price:'gem',amount:499,badge:'',badgeClass:''},
+      ]},
+      {title:'💰 ALTIN İLE AL',items:[
+        {em:'🐻',name:'Nita',type:'Nadir Savaşçı',price:'coin',amount:2000,badge:'',badgeClass:''},
+        {em:'🤠',name:'Colt',type:'Nadir Savaşçı',price:'coin',amount:2000,badge:'',badgeClass:''},
+        {em:'🐂',name:'Bull',type:'Nadir Savaşçı',price:'coin',amount:2000,badge:'',badgeClass:''},
+        {em:'💣',name:'Dynamike',type:'Süper Nadir Savaşçı',price:'coin',amount:6000,badge:'',badgeClass:''},
+        {em:'🎮',name:'8-Bit',type:'Süper Nadir Savaşçı',price:'coin',amount:6000,badge:'',badgeClass:''},
+        {em:'🏍️',name:'Stu',type:'Epik Savaşçı',price:'coin',amount:25000,badge:'',badgeClass:''},
+      ]},
+    ]
+  },
+  skins:{
+    sections:[
+      {title:'🎨 EFSANEVİ KOSTÜMLER',items:[
+        {em:'🏆',name:'Kral Leon',type:'Kostüm - Efsane',price:'gem',amount:299,badge:'EFSANE',badgeClass:'sale'},
+        {em:'🌟',name:'Galaxy Shelly',type:'Kostüm - Efsane',price:'gem',amount:299,badge:'',badgeClass:''},
+        {em:'🔮',name:'Mystic Tara',type:'Kostüm - Epik',price:'gem',amount:149,badge:'YENİ',badgeClass:'new'},
+        {em:'⚡',name:'Storm Frank',type:'Kostüm - Epik',price:'gem',amount:149,badge:'',badgeClass:''},
+      ]},
+      {title:'💰 UYGUN KOSTüMLER',items:[
+        {em:'🎩',name:'Şişman Piper',type:'Kostüm - Nadir',price:'gem',amount:79,badge:'',badgeClass:''},
+        {em:'🤖',name:'Robo Mike',type:'Kostüm - Nadir',price:'gem',amount:79,badge:'İNDİRİM',badgeClass:'sale',oldPrice:99},
+        {em:'🌺',name:'Ninja Rosa',type:'Kostüm - Nadir',price:'gem',amount:79,badge:'',badgeClass:''},
+        {em:'🌊',name:'Surf Brock',type:'Kostüm - Epik',price:'gem',amount:149,badge:'',badgeClass:''},
+      ]},
+    ]
+  },
+  gems:{
+    sections:[
+      {title:'💎 ELMA PAKETLERİ',items:[
+        {em:'💎',name:'30 Elmas',type:'Başlangıç Paketi',price:'gem',amount:0.99,isMoney:true,badge:'',badgeClass:''},
+        {em:'💎',name:'80 Elmas',type:'Küçük Paket',price:'gem',amount:1.99,isMoney:true,badge:'',badgeClass:''},
+        {em:'💎',name:'170 Elmas',type:'Orta Paket',price:'gem',amount:4.99,isMoney:true,badge:'BONUS',badgeClass:'new'},
+        {em:'💎',name:'360 Elmas',type:'Büyük Paket',price:'gem',amount:9.99,isMoney:true,badge:'BONUS',badgeClass:'new'},
+        {em:'💎',name:'950 Elmas',type:'Dev Paket',price:'gem',amount:24.99,isMoney:true,badge:'%20 EKSTRA',badgeClass:'sale'},
+        {em:'💎',name:'2000 Elmas',type:'Ultra Paket',price:'gem',amount:49.99,isMoney:true,badge:'%30 EKSTRA',badgeClass:'sale'},
+      ]},
+    ]
+  },
+  offers:{
+    sections:[
+      {title:'🎁 ÖZEL TEKLİFLER',items:[
+        {em:'🎪',name:'Başlangıç Paketi',type:'Savaşçı + 100 Altın',price:'gem',amount:29,badge:'DEĞER',badgeClass:'new'},
+        {em:'💫',name:'Pass Plus',type:'Sezon Geçişi + Ekstralar',price:'gem',amount:299,badge:'ÇOK DEĞER',badgeClass:'sale'},
+        {em:'🎯',name:'Günlük Teklif',type:'Rastgele Ödül',price:'coin',amount:500,badge:'BUGÜN',badgeClass:'new'},
+        {em:'🏅',name:'Kulüp Paketi',type:'Kulüp Paraları x50',price:'gem',amount:99,badge:'',badgeClass:''},
+      ]},
+    ],
+    pass:{
+      name:'STARR PASİ PLUS',
+      sub:'Tüm pas ödülleri + Özel kostüm + Günlük elmas!',
+      price:'gem',amount:299,
+      rewards:['💎 Günlük 5 Elmas','🎨 Özel Kostüm','⭐ 2x Yıldız Gücü','🏆 Özel Unvan']
+    }
+  }
+};
+
+function shopTab(tab, btn){
+  document.querySelectorAll('.shop-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderShop(tab);
+}
+
+function renderShop(tab){
+  const data=SHOP_DATA[tab];
+  let html='';
+
+  // Starr Pass (öne çıkan ve teklifler)
+  if(tab==='featured'){
+    const b=data.banner;
+    html+=`<div class="shop-banner">
+      <div><div class="shop-banner-txt">${b.icon} ${b.title}</div><div class="shop-banner-sub">${b.sub}</div></div>
+      <div class="shop-timer">⏱ ${b.timer}</div>
+    </div>`;
+  }
+
+  if(tab==='offers'&&data.pass){
+    const p=data.pass;
+    html+=`<div class="starr-pass">
+      <div class="sp-row">
+        <div><div class="sp-name">⭐ ${p.name}</div><div class="sp-sub">${p.sub}</div></div>
+        <button class="sp-btn" onclick="buyItem('${p.name}','gem',${p.amount})">${p.amount} 💎</button>
+      </div>
+      <div class="sp-rewards">${p.rewards.map(r=>`<div class="sp-rew">${r}</div>`).join('')}</div>
+    </div>`;
+  }
+
+  if(tab==='gems'){
+    html+=`<div class="offer-box">
+      <div class="offer-title">💎 Elma Satın Al</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);">Elmalar ile özel kostümler, savaşçılar ve daha fazlasını satın alabilirsin!</div>
+    </div>`;
+  }
+
+  // Wide items
+  if(data.wide){
+    data.wide.forEach(w=>{
+      html+=`<div class="shop-section"><div class="shop-grid">
+        <div class="shop-wide" onclick="buyItem('${w.name}','gem',${w.amount})">
+          <div class="shop-wide-em">${w.em}</div>
+          <div class="shop-wide-txt"><div class="shop-wide-name">${w.name}</div><div class="shop-wide-sub">${w.sub}</div></div>
+          <button class="buy-btn">${w.amount} 💎</button>
+        </div>
+      </div></div>`;
+    });
+  }
+
+  // Sections
+  (data.sections||[]).forEach(sec=>{
+    html+=`<div class="shop-section"><div class="shop-sec-title">${sec.title}</div><div class="shop-grid">`;
+    sec.items.forEach(item=>{
+      const priceBtn=item.price==='free'
+        ?`<div class="price-free">ÜCRETSİZ</div>`
+        :item.isMoney
+          ?`<div class="price-gem">₺${item.amount}</div>`
+          :item.price==='gem'
+            ?`<div class="price-gem">💎 ${item.amount}</div>${item.oldPrice?`<div class="price-old">💎${item.oldPrice}</div>`:''}`
+            :`<div class="price-coin">🪙 ${item.amount}</div>`;
+      const featClass=item.badge==='YENİ'?'gem-deal':item.price==='gem'&&item.amount>200?'featured':'';
+      html+=`<div class="shop-item ${featClass}" onclick="buyItem('${item.name}','${item.price}',${item.amount||0},${!!item.isMoney})">
+        <div class="shop-item-top" style="background:linear-gradient(135deg,${item.price==='gem'?'rgba(0,100,200,0.3)':item.price==='free'?'rgba(38,192,90,0.3)':'rgba(200,130,0,0.3)'},transparent)">
+          ${item.em}
+          ${item.badge?`<div class="shop-item-badge ${item.badgeClass}">${item.badge}</div>`:''}
+        </div>
+        <div class="shop-item-info">
+          <div class="shop-item-name">${item.name}</div>
+          <div class="shop-item-type">${item.type}</div>
+          <div class="shop-item-price">${priceBtn}</div>
+        </div>
+      </div>`;
+    });
+    html+='</div></div>';
+  });
+
+  document.getElementById('shopBody').innerHTML=html;
+}
+
+function buyItem(name, priceType, amount, isMoney){
+  if(isMoney){
+    // Hangi paket, kaç elma?
+    const gemMap={'30 Elmas':30,'80 Elmas':80,'170 Elmas':170,'360 Elmas':360,'950 Elmas':950,'2000 Elmas':2000};
+    const gemsToAdd=gemMap[name]||30;
+    openPayment(name,'💎','₺'+amount.toFixed(2).replace('.',','),gemsToAdd);
+    return;
+  }
+  if(priceType==='free'){
+    toast('🎁 '+name+' alındı! Hesabına eklendi.');
+    return;
+  }
+  if(priceType==='gem'){
+    if(shopGems>=amount){
+      shopGems-=amount;
+      document.getElementById('shopGems').textContent=shopGems;
+      toast('✅ '+name+' satın alındı! ('+amount+' 💎 harcandı)');
+    } else {
+      toast('❌ Yeterli elma yok! '+amount+' 💎 gerekiyor.');
+    }
+  } else if(priceType==='coin'){
+    if(shopCoins>=amount){
+      shopCoins-=amount;
+      document.getElementById('shopCoins').textContent=shopCoins.toLocaleString();
+      toast('✅ '+name+' satın alındı! ('+amount+' 🪙 harcandı)');
+    } else {
+      toast('❌ Yeterli altın yok!');
+    }
+  }
+}
+</script>
+
+<!-- PAYMENT MODAL -->
+<div class="pay-overlay" id="payOverlay">
+  <div class="pay-modal" id="payModal">
+    <div class="pay-header">
+      <div class="pay-logo">🔐</div>
+      <div class="pay-header-txt">Güvenli Ödeme</div>
+      <div class="pay-secure">🔒 SSL GÜVENLİ</div>
+    </div>
+
+    <div id="payFormArea">
+      <div class="pay-body">
+        <div class="pay-product">
+          <div class="pay-product-em" id="payEm">💎</div>
+          <div class="pay-product-name" id="payName">Elmas Paketi</div>
+          <div class="pay-product-price" id="payPrice">₺4,99</div>
+        </div>
+
+        <div class="card-icons">
+          <div class="card-icon" id="ci-visa">VISA</div>
+          <div class="card-icon" id="ci-mc">MC</div>
+          <div class="card-icon" id="ci-troy">TROY</div>
+          <div class="card-icon" id="ci-amex">AMEX</div>
+        </div>
+
+        <div class="pay-label">KART NUMARASI</div>
+        <div class="card-num-wrap">
+          <input class="pay-input" id="cardNum" type="tel" maxlength="19" placeholder="0000  0000  0000  0000" oninput="fmtCard(this)">
+          <div class="card-brand" id="cardBrand"></div>
+        </div>
+
+        <div class="pay-label">KART SAHİBİNİN ADI SOYADI</div>
+        <input class="pay-input" id="cardName" type="text" placeholder="AD SOYAD" style="text-transform:uppercase;">
+
+        <div class="pay-row">
+          <div style="flex:1">
+            <div class="pay-label">SON KULLANMA</div>
+            <input class="pay-input" id="cardExp" type="tel" maxlength="5" placeholder="AA/YY" oninput="fmtExp(this)">
+          </div>
+          <div style="flex:1">
+            <div class="pay-label">CVV / CVC</div>
+            <input class="pay-input" id="cardCvv" type="tel" maxlength="4" placeholder="•••">
+          </div>
+        </div>
+
+        <button class="pay-btn" id="payBtn" onclick="submitPayment()">💳 ÖDEMEYİ TAMAMLA</button>
+        <button class="pay-cancel" onclick="closePayment()">İptal</button>
+        <div class="pay-terms">🔒 256-bit SSL şifrelemesi ile korunmaktadır.<br>Bu işlem yalnızca oyun içi simülasyondur. Gerçek ücret alınmaz.</div>
+      </div>
+    </div>
+
+    <div class="pay-success" id="paySuccess">
+      <div class="pay-success-icon">✅</div>
+      <div class="pay-success-title">ÖDEME BAŞARILI!</div>
+      <div class="pay-success-sub" id="paySuccessSub">Elmalar hesabına eklendi!</div>
+      <button class="pay-success-btn" onclick="closePayment()">Harika! 🎉</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+</style>
+
+<script>
+let currentPayItem={name:'',em:'💎',price:'₺4,99',gems:0};
+
+function openPayment(name,em,priceStr,gems){
+  currentPayItem={name,em,price:priceStr,gems};
+  document.getElementById('payEm').textContent=em;
+  document.getElementById('payName').textContent=name;
+  document.getElementById('payPrice').textContent=priceStr;
+  document.getElementById('payFormArea').style.display='block';
+  document.getElementById('paySuccess').classList.remove('show');
+  ['cardNum','cardName','cardExp','cardCvv'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cardBrand').textContent='';
+  ['ci-visa','ci-mc','ci-troy','ci-amex'].forEach(id=>document.getElementById(id).style.opacity='0.4');
+  document.getElementById('payOverlay').classList.add('open');
+}
+function closePayment(){
+  document.getElementById('payOverlay').classList.remove('open');
+}
+function fmtCard(el){
+  let v=el.value.replace(/\D/g,'').slice(0,16);
+  el.value=v.replace(/(.{4})/g,'$1  ').trim();
+  const brand=document.getElementById('cardBrand');
+  ['ci-visa','ci-mc','ci-troy','ci-amex'].forEach(id=>document.getElementById(id).style.opacity='0.35');
+  if(v.startsWith('4')){brand.textContent='💙';document.getElementById('ci-visa').style.opacity='1';}
+  else if(v.startsWith('5')||v.startsWith('2')){brand.textContent='🔴';document.getElementById('ci-mc').style.opacity='1';}
+  else if(v.startsWith('9')){brand.textContent='🔵';document.getElementById('ci-troy').style.opacity='1';}
+  else if(v.startsWith('3')){brand.textContent='🟡';document.getElementById('ci-amex').style.opacity='1';}
+  else brand.textContent='';
+}
+function fmtExp(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>=2) v=v.slice(0,2)+'/'+v.slice(2,4);
+  el.value=v;
+}
+function submitPayment(){
+  const num=document.getElementById('cardNum').value.replace(/\s/g,'');
+  const name=document.getElementById('cardName').value.trim();
+  const exp=document.getElementById('cardExp').value;
+  const cvv=document.getElementById('cardCvv').value;
+  if(num.length<16){shakePay();toast('❌ Kart numarasını tam gir!');return;}
+  if(name.length<3){shakePay();toast('❌ Kart sahibi adını gir!');return;}
+  if(exp.length<5){shakePay();toast('❌ Son kullanma tarihini gir!');return;}
+  if(cvv.length<3){shakePay();toast('❌ CVV kodunu gir!');return;}
+  const btn=document.getElementById('payBtn');
+  btn.textContent='⏳ İşleniyor...';btn.disabled=true;btn.style.opacity='0.7';
+  setTimeout(()=>{
+    btn.textContent='💳 ÖDEMEYİ TAMAMLA';btn.disabled=false;btn.style.opacity='1';
+    document.getElementById('payFormArea').style.display='none';
+    document.getElementById('paySuccess').classList.add('show');
+    document.getElementById('paySuccessSub').textContent=currentPayItem.name+' hesabına eklendi! 🎉';
+    shopGems+=currentPayItem.gems;
+    if(document.getElementById('shopGems')) document.getElementById('shopGems').textContent=shopGems;
+  },2000);
+}
+function shakePay(){
+  const m=document.getElementById('payModal');
+  m.style.animation='none';void m.offsetHeight;m.style.animation='shake 0.4s ease-out';
+}
+
+// ============================================================
+// BRAWL PASS
+// ============================================================
+function renderBrawlPass(){
+  const freeRewards=[
+    {tier:1,type:'coins',val:'150 Altın',icon:'🟡'},
+    {tier:3,type:'box',val:'Brawl Kutusu',icon:'📦'},
+    {tier:5,type:'pp',val:'50 Güç Puanı',icon:'⚡'},
+    {tier:8,type:'coins',val:'300 Altın',icon:'🟡'},
+    {tier:10,type:'box',val:'Büyük Kutu',icon:'📦'},
+    {tier:15,type:'gems',val:'25 Elmas',icon:'💎'},
+    {tier:20,type:'pp',val:'100 Güç Puanı',icon:'⚡'},
+    {tier:25,type:'coins',val:'500 Altın',icon:'🟡'},
+    {tier:30,type:'box',val:'Mega Kutu',icon:'🎁'},
+    {tier:40,type:'coins',val:'1000 Altın',icon:'🟡'},
+    {tier:50,type:'skin',val:'Özel Başlık',icon:'🏅'},
+    {tier:70,type:'brawler',val:'Yeni Brawler',icon:'⭐'},
+  ];
+  const premRewards=[
+    {tier:1,type:'gems',val:'30 Elmas',icon:'💎'},
+    {tier:2,type:'box',val:'Büyük Kutu',icon:'📦'},
+    {tier:3,type:'skin',val:'Brawl Pass Kostüm',icon:'🎭'},
+    {tier:5,type:'coins',val:'500 Altın',icon:'🟡'},
+    {tier:8,type:'gems',val:'50 Elmas',icon:'💎'},
+    {tier:10,type:'box',val:'Mega Kutu',icon:'🎁'},
+    {tier:15,type:'pp',val:'200 Güç Puanı',icon:'⚡'},
+    {tier:20,type:'coins',val:'1000 Altın',icon:'🟡'},
+    {tier:25,type:'gems',val:'80 Elmas',icon:'💎'},
+    {tier:30,type:'skin',val:'Özel Kostüm',icon:'🎭'},
+    {tier:40,type:'box',val:'Starlı Kutu x3',icon:'⭐'},
+    {tier:50,type:'gems',val:'100 Elmas',icon:'💎'},
+    {tier:60,type:'skin',val:'Animasyonlu Kostüm',icon:'🎭'},
+    {tier:70,type:'brawler',val:'Efsane Brawler',icon:'🏆'},
+  ];
+  const tier=12;
+  const makeReward=(r,unlocked,premium)=>{
+    const un=r.tier<=tier&&unlocked;
+    return `<div style="flex:0 0 72px;background:${un?'rgba(247,183,49,0.2)':'rgba(255,255,255,0.04)'};border:2px solid ${un?(premium?'#c084fc':'#f7b731'):'rgba(255,255,255,0.1)'};border-radius:12px;padding:6px;text-align:center;position:relative;">
+      <div style="font-size:22px;">${r.icon}</div>
+      <div style="font-size:8px;font-weight:900;color:${un?(premium?'#c084fc':'#f7b731'):'rgba(255,255,255,0.4)'};line-height:1.2;margin-top:2px;">${r.val}</div>
+      <div style="position:absolute;top:-7px;left:50%;transform:translateX(-50%);background:${un?'#f7b731':'#444'};color:#000;font-size:7px;font-weight:900;padding:1px 4px;border-radius:4px;">T${r.tier}</div>
+      ${un?'<div style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);font-size:10px;">✅</div>':''}
+    </div>`;
+  };
+  document.getElementById('bpFreeRewards').innerHTML=freeRewards.map(r=>makeReward(r,true,false)).join('');
+  document.getElementById('bpPremRewards').innerHTML=premRewards.map(r=>makeReward(r,false,true)).join('');
+}
+
+// ============================================================
+// TROPHY ROAD
+// ============================================================
+function renderTrophyRoad(){
+  const userTrophies=651;
+  const milestones=[
+    {t:0,icon:'🏆',reward:'Oyuna Başla!',label:'Başlangıç'},
+    {t:50,icon:'📦',reward:'Brawl Kutusu',label:'Acemi I'},
+    {t:200,icon:'🟡',reward:'500 Altın',label:'Acemi II'},
+    {t:500,icon:'📦',reward:'Büyük Kutu',label:'Bronz III'},
+    {t:1000,icon:'💎',reward:'30 Elmas',label:'Gümüş I'},
+    {t:2000,icon:'📦',reward:'Mega Kutu',label:'Gümüş II'},
+    {t:3000,icon:'⚡',reward:'200 Güç Puanı',label:'Altın I'},
+    {t:5000,icon:'🎭',reward:'Özel Kostüm',label:'Altın II'},
+    {t:8000,icon:'💎',reward:'80 Elmas',label:'Elmas I'},
+    {t:10000,icon:'⭐',reward:'Starr Brawler',label:'Elmas II'},
+    {t:15000,icon:'🏅',reward:'Özel Rozet',label:'Mitik'},
+    {t:25000,icon:'🏆',reward:'Altın Kostüm',label:'Efsanevi'},
+    {t:35000,icon:'👑',reward:'Şampiyon Başlığı',label:'Şampiyon'},
+    {t:50000,icon:'💫',reward:'Ultra Kostüm',label:'Uzay Şampiyonu'},
+  ];
+  const el=document.getElementById('trophyRoadList');
+  el.innerHTML=milestones.map((m,i)=>{
+    const unlocked=userTrophies>=m.t;
+    const next=milestones[i+1];
+    const isNext=next&&userTrophies>=m.t&&userTrophies<next.t;
+    const progress=next?Math.min(100,Math.round((userTrophies-m.t)/(next.t-m.t)*100)):100;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div style="width:52px;height:52px;border-radius:50%;background:${unlocked?'linear-gradient(135deg,#f7b731,#e87810)':'rgba(255,255,255,0.06)'};border:3px solid ${unlocked?'#f7b731':isNext?'rgba(247,183,49,0.4)':'rgba(255,255,255,0.1)'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${m.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+          <span style="font-family:'Lilita One',cursive;font-size:12px;color:${unlocked?'#fff':'rgba(255,255,255,0.4)'};">${m.label}</span>
+          <span style="font-size:10px;color:${unlocked?'#f7b731':'rgba(255,255,255,0.3)'};">${m.t.toLocaleString()} 🏆</span>
+        </div>
+        <div style="font-size:10px;color:${unlocked?'#26c05a':'rgba(255,255,255,0.35)'};margin-bottom:4px;">${unlocked?'✅ ':''} ${m.reward}</div>
+        ${isNext?`<div style="background:rgba(255,255,255,0.08);border-radius:5px;height:5px;overflow:hidden;"><div style="width:${progress}%;height:100%;background:linear-gradient(90deg,#f7b731,#e87810);border-radius:5px;"></div></div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px;">${userTrophies}/${next.t} 🏆</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// RANKING / SIRALAMA
+// ============================================================
+const RANK_DATA={
+  local:[
+    {rank:1,name:'KralFurkan',emoji:'👑',trophies:24350,brawler:'🤖',change:'+2'},
+    {rank:2,name:'AteşBurak',emoji:'🔥',trophies:22100,brawler:'🦹',change:'='},
+    {rank:3,name:'ElmasKaan',emoji:'💎',trophies:19800,brawler:'🧙',change:'+1'},
+    {rank:4,name:'GökYiğit',emoji:'⚡',trophies:17650,brawler:'🦇',change:'-1'},
+    {rank:5,name:'TaşOğuz',emoji:'🗿',trophies:15400,brawler:'🤖',change:'+3'},
+    {rank:6,name:'KılıçAli',emoji:'⚔️',trophies:14200,brawler:'🐻',change:'='},
+    {rank:7,name:'DeliMehmet',emoji:'😈',trophies:13100,brawler:'👹',change:'+1'},
+    {rank:8,name:'SakinEren',emoji:'🌊',trophies:11800,brawler:'🦹',change:'-2'},
+    {rank:9,name:'BombaHasan',emoji:'💥',trophies:9700,brawler:'🧙',change:'='},
+    {rank:10,name:'HızlıEmre',emoji:'🏃',trophies:8500,brawler:'🤖',change:'+5'},
+    {rank:11,name:'UzakTolga',emoji:'🎯',trophies:7200,brawler:'🦇',change:'+2'},
+    {rank:12,name:'GüçlüMurat',emoji:'💪',trophies:6100,brawler:'🐻',change:'='},
+    {rank:47,name:'SEN',emoji:'⭐',trophies:651,brawler:'🤖',change:'+12',isMe:true},
+  ],
+  global:[
+    {rank:1,name:'IceCold_Pro',emoji:'❄️',trophies:89400,brawler:'🦹',change:'+1'},
+    {rank:2,name:'SpeedDemon99',emoji:'⚡',trophies:87200,brawler:'🤖',change:'-1'},
+    {rank:3,name:'NightStalker',emoji:'🌙',trophies:85100,brawler:'🧙',change:'='},
+    {rank:4,name:'DiamondKing',emoji:'💎',trophies:82300,brawler:'🦇',change:'+2'},
+    {rank:5,name:'InfernoBoy',emoji:'🔥',trophies:79900,brawler:'🐻',change:'='},
+    {rank:6,name:'StormBreaker',emoji:'⛈️',trophies:77400,brawler:'🤖',change:'-1'},
+    {rank:7,name:'GhostBlade',emoji:'👻',trophies:75000,brawler:'🦹',change:'+3'},
+    {rank:8,name:'SolarFlare',emoji:'☀️',trophies:72600,brawler:'🧙',change:'='},
+    {rank:9,name:'VoidWalker',emoji:'🌀',trophies:70100,brawler:'🦇',change:'+1'},
+    {rank:10,name:'CrimsonFang',emoji:'🩸',trophies:68500,brawler:'🐻',change:'-2'},
+    {rank:1247,name:'SEN',emoji:'⭐',trophies:651,brawler:'🤖',change:'+89',isMe:true},
+  ],
+  friends:[
+    {rank:1,name:'KralFurkan',emoji:'👑',trophies:24350,brawler:'🤖',change:'+2'},
+    {rank:2,name:'AteşBurak',emoji:'🔥',trophies:22100,brawler:'🦹',change:'='},
+    {rank:3,name:'ElmasKaan',emoji:'💎',trophies:19800,brawler:'🧙',change:'+1'},
+    {rank:7,name:'SEN',emoji:'⭐',trophies:651,brawler:'🤖',change:'+12',isMe:true},
+  ]
+};
+function renderRanking(tab){
+  const data=RANK_DATA[tab];
+  const el=document.getElementById('rankList');
+  let html='';
+  let prevRank=-1;
+  data.forEach((p,i)=>{
+    if(p.rank>prevRank+1&&i>0) html+=`<div style="text-align:center;padding:8px 0;color:rgba(255,255,255,0.2);font-size:12px;">• • •</div>`;
+    prevRank=p.rank;
+    const rankColor=p.rank===1?'#f7b731':p.rank===2?'#c0c0c0':p.rank===3?'#cd7f32':p.isMe?'#00d4ff':'rgba(255,255,255,0.5)';
+    const changeColor=p.change.startsWith('+')?'#26c05a':p.change==='-'||p.change.startsWith('-')?'#ff4444':'rgba(255,255,255,0.4)';
+    html+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:${p.isMe?'rgba(0,212,255,0.08)':'transparent'};border-bottom:1px solid rgba(255,255,255,0.05);${p.isMe?'border-left:3px solid #00d4ff;':''}">
+      <div style="width:32px;text-align:center;font-family:'Lilita One',cursive;font-size:16px;color:${rankColor};">${p.rank}</div>
+      <div style="font-size:24px;">${p.emoji}</div>
+      <div style="flex:1;">
+        <div style="font-weight:900;font-size:13px;color:${p.isMe?'#00d4ff':'#fff'};">${p.name}${p.isMe?' 👈':''}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);">Brawler: ${p.brawler}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:'Lilita One',cursive;font-size:14px;color:#f7b731;">${p.trophies.toLocaleString()} 🏆</div>
+        <div style="font-size:10px;color:${changeColor};">${p.change}</div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+function showRankTab(tab,btn){
+  document.querySelectorAll('.rank-tab').forEach(b=>{
+    b.style.color='rgba(255,255,255,0.5)';b.style.borderBottomColor='transparent';
+  });
+  btn.style.color='#fff';btn.style.borderBottomColor='#f7b731';
+  renderRanking(tab);
+}
+
+// ============================================================
+// CLUB / KULÜP
+// ============================================================
+const CLUB_MEMBERS=[
+  {name:'KralFurkan',emoji:'👑',trophies:24350,role:'Başkan',roleColor:'#f7b731'},
+  {name:'AteşBurak',emoji:'🔥',trophies:22100,role:'Yardımcı',roleColor:'#c084fc'},
+  {name:'ElmasKaan',emoji:'💎',trophies:19800,role:'Kıdemli',roleColor:'#00d4ff'},
+  {name:'GökYiğit',emoji:'⚡',trophies:17650,role:'Üye',roleColor:'#26c05a'},
+  {name:'TaşOğuz',emoji:'🗿',trophies:15400,role:'Üye',roleColor:'#26c05a'},
+  {name:'KılıçAli',emoji:'⚔️',trophies:14200,role:'Üye',roleColor:'#26c05a'},
+  {name:'DeliMehmet',emoji:'😈',trophies:13100,role:'Üye',roleColor:'#26c05a'},
+  {name:'SakinEren',emoji:'🌊',trophies:11800,role:'Üye',roleColor:'#26c05a'},
+  {name:'BombaHasan',emoji:'💥',trophies:9700,role:'Üye',roleColor:'#26c05a'},
+  {name:'HızlıEmre',emoji:'🏃',trophies:8500,role:'Üye',roleColor:'#26c05a'},
+  {name:'SEN ('+((window.PLAYER_NAME)||'Oyuncu')+')',emoji:'⭐',trophies:651,role:'Üye',roleColor:'#00d4ff',isMe:true},
+  {name:'UzakTolga',emoji:'🎯',trophies:7200,role:'Üye',roleColor:'#26c05a'},
+  {name:'GüçlüMurat',emoji:'💪',trophies:6100,role:'Üye',roleColor:'#26c05a'},
+  {name:'GizliCan',emoji:'👁️',trophies:5800,role:'Üye',roleColor:'#26c05a'},
+  {name:'RüzgarYusuf',emoji:'🌪️',trophies:5100,role:'Üye',roleColor:'#26c05a'},
+];
+function renderClub(){
+  const el=document.getElementById('clubMembers');
+  el.innerHTML=CLUB_MEMBERS.map(m=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);${m.isMe?'background:rgba(0,212,255,0.06);border-radius:8px;padding-left:8px;':''}">
+      <div style="font-size:28px;">${m.emoji}</div>
+      <div style="flex:1;">
+        <div style="font-weight:900;font-size:13px;color:${m.isMe?'#00d4ff':'#fff'};">${m.name}</div>
+        <div style="font-size:10px;font-weight:800;color:${m.roleColor};">${m.role}</div>
+      </div>
+      <div style="font-family:'Lilita One',cursive;font-size:13px;color:#f7b731;">${m.trophies.toLocaleString()} 🏆</div>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>
